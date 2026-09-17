@@ -1,0 +1,80 @@
+name: 提交答案 / Submit an answer
+description: 上传你为某道习题撰写的解答，教师审核后会展示在网站上
+title: "[答案] "
+labels: ["answer", "待审核"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你把解答分享给同学 🎉
+
+        - 公式用 LaTeX：行内写 `$c_t = y_t - r d_{t-1}$`，独立成行用 `$$ ... $$`
+        - **附件（手写照片、PDF、代码）直接拖进下面的正文框**，GitHub 会自动上传
+        - 提交后教师会审核，通过后会出现在对应习题的「同学答案」里
+
+  - type: input
+    id: exercise
+    attributes:
+      label: 习题编号
+      description: 例如 2.1、3.5、13.12
+      placeholder: "2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: 姓名或昵称
+      description: 想匿名展示就填「匿名」
+      placeholder: "张一鸣 / 匿名"
+    validations:
+      required: true
+
+  - type: input
+    id: affiliation
+    attributes:
+      label: 班级或学号（可选，不会公开）
+      placeholder: "2024 级经济学基地班 2024010234"
+    validations:
+      required: false
+
+  - type: input
+    id: title
+    attributes:
+      label: 解答标题（可选）
+      description: 一句话说明你的思路特点，便于同学检索
+      placeholder: "用跨期预算约束直接求解，比迭代更快"
+    validations:
+      required: false
+
+  - type: textarea
+    id: answer
+    attributes:
+      label: 我的解答
+      description: 支持 Markdown 与 LaTeX；把附件直接拖进这个框即可上传
+      render: markdown
+      placeholder: |
+        第一步，写出家庭的跨期预算约束：
+
+        $$ \sum_{j=0}^{\infty} \frac{c_{t+j}}{(1+r)^j} = (1+r)a_{t-1} + \sum_{j=0}^{\infty} \frac{y_{t+j}}{(1+r)^j} $$
+
+        因为禀赋服从 AR(1) 过程，所以……
+    validations:
+      required: true
+
+  - type: input
+    id: tags
+    attributes:
+      label: 标签（可选）
+      description: 用逗号分隔
+      placeholder: "欧拉方程, 永久收入, 数值求解"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 这是我自己的解答，允许在课程网站上公开展示（可署名或匿名）。
+          required: true

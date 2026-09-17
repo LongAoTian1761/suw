@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 只想讨论、提问或指出错误
+    url: https://github.com
+    about: 请直接在对应习题页面的讨论区留言，或开一个不带「答案」标签的 Issue。

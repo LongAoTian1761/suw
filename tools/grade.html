@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批改作业 · 国际宏观经济学</title>
+<link rel="stylesheet" href="/assets/css/site.css">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'x-usd'] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="/assets/vendor/tex-svg.js"></script>
+<style>
+  body { background: var(--band); }
+  .grade-shell { max-width: 1260px; margin: 0 auto; padding: 24px 20px 60px; }
+  .grade-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+  .grade-head h1 { font-size: 1.5rem; margin: 0; }
+  .grade-head .muted { color: var(--muted); font-size: 0.88rem; margin-left: auto; }
+  .grade-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .grade-toolbar input, .grade-toolbar select {
+    font: inherit; font-size: 0.9rem; padding: 8px 11px;
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: #fff;
+  }
+  .grade-toolbar input[type=search] { flex: 1 1 240px; min-width: 0; }
+  .grade-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 940px) { .grade-layout { grid-template-columns: minmax(0, 1fr); } }
+  .grade-list { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .grade-list__item {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    border-bottom: 1px solid var(--line); padding: 11px 14px; cursor: pointer; font: inherit;
+  }
+  .grade-list__item:hover { background: var(--brand-tint); }
+  .grade-list__item[aria-selected="true"] { background: var(--brand-tint); box-shadow: inset 3px 0 0 var(--brand); }
+  .grade-list__top { display: flex; gap: 8px; align-items: baseline; font-size: 0.86rem; }
+  .grade-list__ex { font-family: var(--font-mono); font-weight: 600; color: var(--brand); }
+  .grade-list__who { font-weight: 600; }
+  .grade-list__sub { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+  .grade-empty { padding: 22px 16px; color: var(--muted); font-size: 0.9rem; }
+  .grade-panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; }
+  .grade-panel h2 { font-size: 1.15rem; margin-bottom: 4px; }
+  .grade-meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+  .grade-answer { border-top: 1px solid var(--line); padding-top: 16px; margin-bottom: 20px; }
+  .grade-form { border-top: 2px solid var(--line-strong); padding-top: 18px; display: grid; gap: 14px; }
+  .grade-row { display: grid; grid-template-columns: 140px minmax(0, 1fr) 170px; gap: 12px; align-items: center; }
+  @media (max-width: 700px) { .grade-row { grid-template-columns: minmax(0, 1fr); } }
+  .grade-form label { font-size: 0.86rem; font-weight: 600; }
+  .grade-form input, .grade-form select, .grade-form textarea {
+    font: inherit; font-size: 0.92rem; padding: 8px 11px; width: 100%;
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: #fff;
+  }
+  .grade-form textarea { min-height: 110px; font-family: var(--font-mono); font-size: 0.86rem; line-height: 1.6; }
+  .grade-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .grade-msg { font-size: 0.86rem; color: var(--muted); }
+  .grade-msg[data-tone="ok"] { color: var(--official); }
+  .grade-msg[data-tone="warn"] { color: #b42318; }
+  .pill { font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--pending-tint); color: var(--pending); }
+  .pill--verified, .pill--peer, .pill--alternative { background: var(--official-tint); color: var(--official); }
+  .pill--withdrawn, .pill--rejected { background: #fdecea; color: #b42318; }
+</style>
+</head>
+<body>
+<div class="grade-shell">
+  <div class="grade-head">
+    <h1>批改作业</h1>
+    <span class="grade-msg" id="cfg"></span>
+    <span class="muted">本机工具 · 密钥不经过浏览器</span>
+  </div>
+
+  <div class="grade-toolbar">
+    <select id="f-status" aria-label="按状态筛选">
+      <option value="all" selected>全部状态</option>
+      <option value="pending">待审核</option>
+      <option value="verified">已发布</option>
+      <option value="peer">同学解答</option>
+      <option value="alternative">另一种思路</option>
+      <option value="withdrawn">已撤回</option>
+      <option value="rejected">已撤下</option>
+    </select>
+    <input type="search" id="f-search" placeholder="搜索姓名 / 学号 / 习题 / 正文关键词" autocomplete="off">
+    <button type="button" class="btn btn--outline btn--sm" id="f-reload">刷新</button>
+    <span class="grade-msg" id="count"></span>
+  </div>
+
+  <div class="grade-layout">
+    <div class="grade-list" id="list"></div>
+    <div class="grade-panel" id="panel"><div class="grade-empty">左边选一条作业开始批改。</div></div>
+  </div>
+</div>
+
+<script src="/assets/js/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var OEM = window.OEM;
+  var rows = [];
+  var current = null;
+  var listEl = document.getElementById("list");
+  var panelEl = document.getElementById("panel");
+  var statusEl = document.getElementById("f-status");
+  var searchEl = document.getElementById("f-search");
+  var countEl = document.getElementById("count");
+
+  var LABEL = {
+    verified: "已发布", peer: "同学解答", alternative: "另一种思路",
+    pending: "待审核", withdrawn: "已撤回", rejected: "已撤下"
+  };
+
+  function msg(text, tone) {
+    var el = document.getElementById("cfg");
+    el.textContent = text || "";
+    if (tone) el.setAttribute("data-tone", tone); else el.removeAttribute("data-tone");
+  }
+
+  function load() {
+    msg("读取中…");
+    fetch("/api/list?status=" + encodeURIComponent(statusEl.value))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) throw new Error(data.error);
+        rows = data;
+        msg("已连接");
+        renderList();
+      })
+      .catch(function (e) { msg("读取失败：" + e.message, "warn"); });
+  }
+
+  function filtered() {
+    var q = searchEl.value.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(function (r) {
+      return (r.exercise + " " + r.author + " " + (r.author_note || "") + " " +
+              (r.title || "") + " " + r.body).toLowerCase().indexOf(q) > -1;
+    });
+  }
+
+  function renderList() {
+    var list = filtered();
+    /* 待批改的排在前面，方便老师从上往下处理 */
+    list = list.slice().sort(function (a, b) {
+      var rank = function (r) {
+        if (r.status === "pending") return 0;
+        if (!r.grade && !r.feedback) return 1;
+        return 2;
+      };
+      var d = rank(a) - rank(b);
+      if (d) return d;
+      return String(b.created_at).localeCompare(String(a.created_at));
+    });
+    countEl.textContent = list.length + " / " + rows.length + " 条";
+    if (!list.length) {
+      listEl.innerHTML = '<div class="grade-empty">没有符合条件的作业。</div>';
+      return;
+    }
+    if (!current || !list.some(function (r) { return r.id === current.id; })) {
+      openRecord(list[0].id);
+      return;
+    }
+    listEl.innerHTML = list.map(function (r) {
+      var graded = (r.grade || r.feedback) ? " · 已批" : "";
+      return '<button type="button" class="grade-list__item" data-id="' + OEM.escAttr(r.id) + '"' +
+        (current && current.id === r.id ? ' aria-selected="true"' : "") + ">" +
+        '<div class="grade-list__top">' +
+        '<span class="grade-list__ex">' + OEM.esc(r.exercise) + "</span>" +
+        '<span class="grade-list__who">' + OEM.esc(r.author) + "</span>" +
+        '<span class="pill pill--' + OEM.escAttr(r.status) + '">' + OEM.esc(LABEL[r.status] || r.status) + "</span>" +
+        "</div>" +
+        '<div class="grade-list__sub">' +
+        OEM.esc(String(r.created_at).slice(0, 16).replace("T", " ")) + graded +
+        (r.author_note ? " · " + OEM.esc(r.author_note) : "") +
+        "</div></button>";
+    }).join("");
+  }
+
+  function openRecord(id) {
+    current = rows.filter(function (r) { return r.id === id; })[0] || null;
+    renderList();
+    if (!current) return;
+    var r = current;
+    panelEl.innerHTML =
+      "<h2>习题 " + OEM.esc(r.exercise) + " · " + OEM.esc(r.author) + "</h2>" +
+      '<p class="grade-meta">提交于 ' + OEM.esc(String(r.created_at).slice(0, 16).replace("T", " ")) +
+      (r.updated_at && r.updated_at !== r.created_at ? "（修改于 " + OEM.esc(String(r.updated_at).slice(0, 16).replace("T", " ")) + "）" : "") +
+      (r.author_note ? "　班级/学号：" + OEM.esc(r.author_note) : "") +
+      (r.revision > 1 ? "　第 " + r.revision + " 版" : "") + "</p>" +
+      (r.title ? "<h3>" + OEM.esc(r.title) + "</h3>" : "") +
+      '<div class="grade-answer">' + OEM.md(r.body) + "</div>" +
+      (r.attachments && r.attachments.length
+        ? '<ul class="attachments">' + r.attachments.map(function (a) {
+            return '<li><a href="' + OEM.escAttr(a.url) + '" target="_blank" rel="noopener">' +
+              OEM.icons_file + "<span>" + OEM.esc(a.name) + "</span><small>" + OEM.esc(a.size || "") + "</small></a></li>";
+          }).join("") + "</ul>"
+        : "") +
+      '<div class="grade-form">' +
+      '<div class="grade-row">' +
+      '<label for="g-grade">等级 / 分数</label>' +
+      '<input type="text" id="g-grade" maxlength="20" placeholder="例如：A、85、已阅" value="' + OEM.escAttr(r.grade || "") + '">' +
+      '<select id="g-status">' +
+      ["verified", "peer", "alternative", "pending", "withdrawn", "rejected"].map(function (s) {
+        return '<option value="' + s + '"' + (r.status === s ? " selected" : "") + ">" + LABEL[s] + "</option>";
+      }).join("") +
+      "</select></div>" +
+      '<label for="g-feedback">批语（支持 Markdown 与 LaTeX，会公开显示在答案下面）</label>' +
+      '<textarea id="g-feedback" maxlength="4000" placeholder="例如：第一步的符号约定要写清楚；结论正确。">' + OEM.esc(r.feedback || "") + "</textarea>" +
+      '<div class="grade-actions">' +
+      '<button type="button" class="btn btn--primary btn--sm" id="g-save">保存</button>' +
+      '<button type="button" class="btn btn--outline btn--sm" id="g-hide">撤下这条</button>' +
+      '<span class="grade-msg" id="g-msg"></span></div>' +
+      "</div>";
+    OEM.typeset();
+
+    document.getElementById("g-save").addEventListener("click", function () {
+      save({
+        id: r.id,
+        grade: document.getElementById("g-grade").value,
+        feedback: document.getElementById("g-feedback").value,
+        status: document.getElementById("g-status").value
+      });
+    });
+    document.getElementById("g-hide").addEventListener("click", function () {
+      if (!confirm("撤下后这条作业会从网站上消失，记录仍保留。确定吗？")) return;
+      save({ id: r.id, status: "rejected" });
+    });
+  }
+
+  function save(payload) {
+    var m = document.getElementById("g-msg");
+    m.textContent = "保存中…";
+    m.removeAttribute("data-tone");
+    fetch("/api/save", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.d.error || "保存失败");
+        m.textContent = "已保存。网站下次打开就会更新。";
+        m.setAttribute("data-tone", "ok");
+        load();
+        if (payload.status) setTimeout(function () { openRecord(payload.id); }, 400);
+      })
+      .catch(function (e) {
+        m.textContent = "保存失败：" + e.message;
+        m.setAttribute("data-tone", "warn");
+      });
+  }
+
+  listEl.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-id]");
+    if (btn) openRecord(btn.getAttribute("data-id"));
+  });
+  statusEl.addEventListener("change", function () { current = null; panelEl.innerHTML = '<div class="grade-empty">左边选一条作业开始批改。</div>'; load(); });
+  searchEl.addEventListener("input", renderList);
+  document.getElementById("f-reload").addEventListener("click", load);
+
+  fetch("/api/config").then(function (r) { return r.json(); }).then(function (c) {
+    msg(c.course + " · " + (c.autoApprove ? "提交即展示" : "先审核后展示"));
+  }).catch(function () {});
+
+  load();
+})();
+</script>
+</body>
+</html>

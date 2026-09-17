@@ -1,0 +1,17 @@
+# 依赖与本地配置
+node_modules/
+.env.local
+.env
+
+# 老师批改工具用到的密钥，绝不能提交
+*.service-key
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 本地预览与联调产生的临时产物
+zz-*.html
+*.log

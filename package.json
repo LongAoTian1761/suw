@@ -1,0 +1,20 @@
+{
+  "name": "open-economy-macroeconomics-solutions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "习题解答库：教师维护参考思路，同学上传自己的解答。",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/serve.mjs",
+    "sync": "node scripts/sync-submissions.mjs",
+    "mock-backend": "node scripts/mock-backend.mjs",
+    "check-backend": "node scripts/check-backend.mjs",
+    "grade": "node scripts/grade-ui.mjs",
+    "moderate": "node scripts/moderate.mjs",
+    "preview": "npm run build && npm run dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
