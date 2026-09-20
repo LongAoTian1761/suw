@@ -277,8 +277,11 @@ node scripts/moderate.mjs rm <id>               # 彻底删除
 
 ## 已知限制
 
-- **公式不需要联网**：MathJax 已经放进 `assets/vendor/tex-svg.js`（2 MB），
-  校园网访问不了 jsDelivr 也照样能排版。想升级版本就重新下载同一个文件覆盖即可
+- **公式不需要联网，而且是按需加载**：MathJax 放在 `assets/vendor/tex-svg.js`
+  （2 MB，线上 gzip 后约 670 KB），但只要页面上没出现公式就**不会下载**。
+  首页、章节页、题面没有公式的习题页因此省下了近 700 KB 的首屏流量；
+  同学在答案里写了 `$...$`，引擎会自动加载并排版。
+  想升级版本就重新下载同一个文件覆盖
   （`https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js`）。
 - **题面是自动提取的**：分式、上下标偶有偏差，页面上有提示；可用
   `showProblemText: false` 完全关闭题面展示。

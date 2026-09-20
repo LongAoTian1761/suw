@@ -248,6 +248,18 @@ if (flag("--json")) {
 if (dryRun) {
   console.log("dry run — data/answers.json unchanged");
 } else {
-  fs.writeFileSync(answersPath, JSON.stringify(next, null, 2) + "\n");
-  console.log(`wrote       ${path.relative(process.cwd(), answersPath)}`);
+  /* 只在答案真的有变化时才写文件。
+     answers.json 里的 updated 日期会被嵌进每一个页面，
+     如果不管有没有新答案都刷新日期，每天的定时任务就会产生一个
+     「180 个文件各改一行」的空提交。 */
+  const byId = (a, b) => String(a.id).localeCompare(String(b.id));
+  const before = JSON.stringify((existing.answers || []).slice().sort(byId));
+  const after = JSON.stringify(next.answers.slice().sort(byId));
+
+  if (before === after) {
+    console.log("内容没有变化，answers.json 保持原样（不产生空提交）");
+  } else {
+    fs.writeFileSync(answersPath, JSON.stringify(next, null, 2) + "\n");
+    console.log(`wrote       ${path.relative(process.cwd(), answersPath)}`);
+  }
 }

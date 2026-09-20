@@ -66,7 +66,6 @@ window.MathJax = {
   svg: { fontCache: 'global' }
 };
 </script>
-<script defer src="${rootPrefix}/assets/vendor/tex-svg.js"></script>
 </head>`;
 }
 
@@ -508,9 +507,14 @@ const wallBody = `  <div class="page-head">
     <div class="page-head__inner">
       <p class="breadcrumb"><a href="index.html">首页</a><span aria-hidden="true">/</span>全部答案</p>
       <h1>全部同学答案</h1>
-      <p class="page-head__meta">共 ${ANSWERS.length} 条已收录的解答，按提交时间从新到旧排列。数据最后更新：${esc(
-        answersFile.updated || "",
-      )}</p>
+      <p class="page-head__meta">${
+        ANSWERS.length
+          ? "共 " +
+            ANSWERS.length +
+            " 条已收录的解答，按提交时间从新到旧排列。" +
+            (answersFile.updated ? "数据最后更新：" + esc(answersFile.updated) + "。" : "")
+          : "还没有同学在这里提交答案。同学从「上传答案」提交之后，就会出现在这里，并且可以按习题或关键词筛选。"
+      }</p>
     </div>
   </div>
   <div class="wrap">

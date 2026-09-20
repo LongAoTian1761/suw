@@ -30,6 +30,9 @@
 
   var MATH_RE = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$[^$\n]*?\$)/g;
 
+  /* 页面内容里出现过公式吗？决定要不要下载公式引擎。 */
+  var sawMath = false;
+
   /* A literal dollar sign (currency, not math) is written `\$` in the source.
      It cannot be left as a bare "$" in the DOM: MathJax would pair it with the
      next one and typeset the text in between as a formula. Wrapping it in an
@@ -81,6 +84,8 @@
     var store = [];
     var text = protectDollars(esc(src).replace(/\r\n/g, "\n"));
     text = extractMath(text, store);
+    /* 这一段内容里真的有公式 —— 记下来，好让 typeset() 决定要不要去下载 MathJax */
+    if (store.length) sawMath = true;
     var lines = text.split("\n");
     var out = [];
     var para = [];
@@ -192,11 +197,41 @@
   /* ------------------------------------------------------------ typeset */
 
   var typesetTimer = null;
+  var mathLoading = null;
+
+  /* MathJax 压缩后也有 670 KB，占首屏下载量的 95%。
+     首页、章节页这类没有公式的页面不该为它付出代价，
+     所以改成「页面上真的出现公式了才去下载」。
+     sawMath 由 md() 在解析到 $...$ 时置位，比正则扫 HTML 更准
+     （页面里的货币符号 $ 不会误判）。 */
+  function ensureMathJax() {
+    if (window.MathJax && window.MathJax.typesetPromise) return Promise.resolve(true);
+    if (!sawMath) return Promise.resolve(false);
+    if (mathLoading) return mathLoading;
+    mathLoading = new Promise(function (resolve) {
+      var s = document.createElement("script");
+      s.src = url("assets/vendor/tex-svg.js");
+      s.async = true;
+      s.onload = function () {
+        resolve(true);
+      };
+      s.onerror = function () {
+        mathLoading = null;
+        resolve(false);
+      };
+      document.head.appendChild(s);
+    });
+    return mathLoading;
+  }
+
   function typeset() {
-    if (!window.MathJax || !window.MathJax.typesetPromise) return;
     clearTimeout(typesetTimer);
     typesetTimer = setTimeout(function () {
-      window.MathJax.typesetPromise().catch(function () {});
+      ensureMathJax().then(function (ok) {
+        if (ok && window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise().catch(function () {});
+        }
+      });
     }, 60);
   }
 
