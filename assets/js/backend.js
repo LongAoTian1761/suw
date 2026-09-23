@@ -30,6 +30,10 @@
 
   var TOKEN_KEY = "oem-device-token-v1";
 
+  /* 上一次读取公开答案成功了没有。null = 还没试过。
+     首页统计要靠它区分「真的是 0 条」和「读不到」。 */
+  var lastFetchOk = null;
+
   function BackendError(message, detail) {
     var e = new Error(message);
     e.name = "BackendError";
@@ -290,15 +294,23 @@
       "?select=" +
       PUBLIC_COLS +
       "&status=in.(verified,peer,alternative)&order=created_at.desc&limit=500";
-    return fetch(URL_BASE + q, { headers: authHeaders({ accept: "application/json" }) })
+    return fetch(URL_BASE + q, {
+      headers: authHeaders({ accept: "application/json" }),
+      /* 没有超时的话，网络卡住时页面会一直停在「正在统计…」 */
+      signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? AbortSignal.timeout(12000)
+        : undefined,
+    })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
       })
       .then(function (rows) {
+        lastFetchOk = true;
         return (rows || []).map(toAnswer);
       })
       .catch(function (err) {
+        lastFetchOk = false;
         if (window.console) console.warn("[backend] 读取云端答案失败：", err.message);
         return [];
       });
@@ -331,6 +343,9 @@
       method: "POST",
       headers: authHeaders({ "content-type": "application/json", accept: "application/json" }),
       body: JSON.stringify({ p_token: token || deviceToken() }),
+      signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? AbortSignal.timeout(12000)
+        : undefined,
     })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -355,6 +370,9 @@
   window.OEMBackend = {
     mode: MODE,
     supabaseReady: supabaseReady,
+    lastFetchOk: function () {
+      return lastFetchOk;
+    },
     maxFileMb: MAX_MB,
     bucket: BUCKET,
     table: TABLE,

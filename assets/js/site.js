@@ -849,6 +849,32 @@
 
     var list = visible(answers || []);
 
+    /* 读不到服务器数据时，不能显示「0」——那会和习题页上真实存在的答案打架。
+       这种情况显示「—」，明确表示「不知道」。 */
+    if (
+      window.OEMBackend &&
+      window.OEMBackend.supabaseReady &&
+      window.OEMBackend.lastFetchOk &&
+      window.OEMBackend.lastFetchOk() === false
+    ) {
+      each("[data-stat-recent]", function (el) {
+        el.textContent = "同学答案统计暂时取不到";
+      });
+      each("[data-chapter-solved]", function (el) {
+        el.textContent = "—";
+      });
+      each("[data-chapter-summary]", function (el) {
+        el.textContent = "统计暂时取不到";
+      });
+      each("[data-exercise-badge]", function (el) {
+        el.textContent = "—";
+        el.className = "tag";
+      });
+      var wall = document.querySelector("[data-wall-summary]");
+      if (wall) wall.textContent = "暂时读不到服务器上的答案，请稍后刷新重试。";
+      return;
+    }
+
     var perExercise = {};
     list.forEach(function (a) {
       var k = String(a.exercise);
