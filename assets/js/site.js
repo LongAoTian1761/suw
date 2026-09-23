@@ -725,6 +725,7 @@
   function boot() {
     initNav();
     initSearch();
+    markStatsPending();
     loadAnswers().then(function (payload) {
       payload.answers = mergeLocal(payload.answers || []);
       renderAll(payload);
@@ -732,13 +733,21 @@
       /* Answers published on the server arrive a moment later; re-render so
          the page is useful immediately without waiting on the network. */
       var backend = window.OEMBackend;
-      if (!backend || !backend.supabaseReady) return;
+      if (!backend || !backend.supabaseReady) {
+        cloudSettled = true;
+        return;
+      }
       /* Ask for the public answers and — in parallel — for everything this
          device submitted, so the author sees their own private grade. */
       Promise.all([backend.fetchApproved(), backend.mySubmissions()]).then(function (res) {
         var cloud = res[0] || [];
         var mine = res[1] || [];
-        if (!cloud.length && !mine.length) return;
+        /* 服务器数据到手（哪怕是空），统计数字这时才允许落地 */
+        cloudSettled = true;
+        if (!cloud.length && !mine.length) {
+          renderAll(payload);
+          return;
+        }
         payload.mine = mine;
 
         /* The server copy is authoritative: a student's own draft is kept in
@@ -785,7 +794,10 @@
             payload.answers.push(a);
             changed = true;
           });
-        if (!changed) return;
+        if (!changed) {
+          renderAll(payload);
+          return;
+        }
         cloud.concat(mine).forEach(function (a) {
           if (a.date && (!payload.updated || a.date > payload.updated)) {
             payload.updated = a.date;
@@ -796,12 +808,133 @@
     });
   }
 
+  /* 服务器上的答案要等一会儿才取回来。这期间把写死的「0」换成占位符，
+     免得同学以为统计坏了。只有真的接了服务器才这么做 ——
+     用本地 answers.json 的时候，构建时的数字本来就是对的。 */
+  var cloudSettled = false;
+
+  function markStatsPending() {
+    if (!(window.OEMBackend && window.OEMBackend.supabaseReady)) return;
+    each("[data-stat-recent]", function (el) {
+      el.textContent = "正在统计同学答案…";
+    });
+    each("[data-chapter-solved]", function (el) {
+      el.textContent = "…";
+    });
+    each("[data-chapter-summary]", function (el) {
+      el.textContent = "正在统计…";
+    });
+    each("[data-exercise-badge]", function (el) {
+      el.textContent = "…";
+      el.className = "tag";
+    });
+  }
+
   function renderAll(payload) {
     renderExercise(payload);
     renderRecent(payload);
     renderWall(payload);
+    updateStats(payload.answers);
     typeset();
     document.dispatchEvent(new CustomEvent("answers:loaded", { detail: payload }));
+  }
+
+  /* 首页、章节页上的统计数字是构建时按静态 answers.json 写好的，
+     而同学真正提交的答案在服务器上。这里用实时数据把它们改过来，
+     否则会出现「习题页有答案、首页却还是 0」的矛盾。 */
+  function updateStats(answers) {
+    /* 服务器数据还没回来之前不要写统计数字：第一次渲染用的是构建时的静态
+       数据（永远是 0），写下去会把「正在统计…」的占位符冲掉。 */
+    if (!cloudSettled && window.OEMBackend && window.OEMBackend.supabaseReady) return;
+
+    var list = visible(answers || []);
+
+    var perExercise = {};
+    list.forEach(function (a) {
+      var k = String(a.exercise);
+      perExercise[k] = (perExercise[k] || 0) + 1;
+    });
+    var perChapter = {};
+    Object.keys(perExercise).forEach(function (k) {
+      var ch = k.split(".")[0];
+      perChapter[ch] = (perChapter[ch] || 0) + 1; // 有解答的题数
+    });
+    var answersPerChapter = {};
+    list.forEach(function (a) {
+      var ch = String(a.exercise).split(".")[0];
+      answersPerChapter[ch] = (answersPerChapter[ch] || 0) + 1;
+    });
+
+    /* 首页：「本学期新增 N 条同学答案」 */
+    var recent = document.querySelector("[data-stat-recent]");
+    if (recent) {
+      var thisMonth = new Date().toISOString().slice(0, 7);
+      var n = list.filter(function (a) {
+        return String(a.date || "").indexOf(thisMonth) === 0;
+      }).length;
+      recent.textContent = "本学期新增 " + n + " 条同学答案";
+    }
+
+    /* 「全部答案」页的抬头 */
+    var wallSummary = document.querySelector("[data-wall-summary]");
+    if (wallSummary) {
+      if (list.length) {
+        var latest = list
+          .map(function (a) {
+            return a.date || "";
+          })
+          .sort()
+          .pop();
+        wallSummary.textContent =
+          "共 " + list.length + " 条已收录的解答，按提交时间从新到旧排列。" +
+          (latest ? "数据最后更新：" + latest + "。" : "");
+      } else {
+        wallSummary.textContent =
+          "还没有同学在这里提交答案。同学从「上传答案」提交之后，就会出现在这里，并且可以按习题或关键词筛选。";
+      }
+    }
+
+    /* 首页章节列表：「N 题 · X 题有解答」 */
+    each("[data-chapter-solved]", function (el) {
+      var num = String(Number(el.getAttribute("data-chapter-solved").replace(/\D/g, "")));
+      el.textContent = perChapter[num] || 0;
+    });
+
+    /* 章节页顶部：「X 题有解答 · 共 Y 条答案」 */
+    each("[data-chapter-summary]", function (el) {
+      var num = String(Number(el.getAttribute("data-chapter-summary").replace(/\D/g, "")));
+      el.textContent =
+        (perChapter[num] || 0) + " 题有解答 · 共 " + (answersPerChapter[num] || 0) + " 条答案";
+    });
+
+    /* 章节页习题列表：把「待提交」换成「N 个答案」 */
+    each("[data-exercise-badge]", function (el) {
+      var n = perExercise[el.getAttribute("data-exercise-badge")] || 0;
+      el.textContent = n ? n + " 个答案" : "待提交";
+      el.className = n ? "tag tag--count" : "tag";
+    });
+
+    /* 站内搜索结果的副标题里也写着「暂无同学答案」，同样是构建时写死的 */
+    if (Array.isArray(window.SEARCH_INDEX)) {
+      window.SEARCH_INDEX.forEach(function (item) {
+        if (!item.c) return;
+        if (item.x) {
+          var n = perExercise[item.x] || 0;
+          item.c = item.c.replace(
+            /(暂无同学答案|\d+ 个同学答案)/,
+            n ? n + " 个同学答案" : "暂无同学答案",
+          );
+        } else if (item.xc) {
+          var num = String(Number(item.xc.replace(/\D/g, "")));
+          item.c = item.c.replace(/\d+ 题有解答/, (perChapter[num] || 0) + " 题有解答");
+        }
+      });
+    }
+  }
+
+  function each(selector, fn) {
+    var nodes = document.querySelectorAll(selector);
+    for (var i = 0; i < nodes.length; i++) fn(nodes[i]);
   }
 
   /* Expose the small toolkit for the submit page. */

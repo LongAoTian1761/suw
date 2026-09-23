@@ -205,7 +205,7 @@ const chapterRows = course.chapters
             <span class="chapter-row__zh">${esc(c.titleZh)}</span>
             <span class="chapter-row__summary">${esc(c.summary)}</span>
           </span>
-          <span class="chapter-row__meta">${c.exercises.length} 题 · <b>${solved}</b> 题有解答</span>
+          <span class="chapter-row__meta">${c.exercises.length} 题 · <b data-chapter-solved="${c.id}">${solved}</b> 题有解答</span>
         </a>
       </li>`;
   })
@@ -238,7 +238,7 @@ const homeBody = `  <div class="wrap">
       <div class="section__head">
         <h2>📚 按章节浏览</h2>
         <p>共 ${course.chapters.length} 章、${totalExercises} 道习题</p>
-        <span class="section__count">本学期新增 ${newThisMonth} 条同学答案</span>
+        <span class="section__count" data-stat-recent>本学期新增 ${newThisMonth} 条同学答案</span>
       </div>
       <ul class="chapter-list">
 ${chapterRows}
@@ -312,9 +312,9 @@ for (const c of course.chapters) {
   const rows = c.exercises
     .map((e) => {
       const n = (answersByExercise[e.id] || []).length;
-      const badge = n
-        ? `<span class="tag tag--count">${n} 个答案</span>`
-        : `<span class="tag">待提交</span>`;
+      const badge = `<span class="${n ? "tag tag--count" : "tag"}" data-exercise-badge="${e.id}">${
+        n ? n + " 个答案" : "待提交"
+      }</span>`;
       return `      <li>
         <a class="exercise-row" href="${e.slug}.html">
           <span class="exercise-row__num">${esc(e.id)}</span>
@@ -345,7 +345,7 @@ for (const c of course.chapters) {
       <div class="section__head">
         <h2>习题列表</h2>
         <p>${c.exercises.length} 道习题</p>
-        <span class="section__count">${solved} 题有解答 · 共 ${total} 条答案</span>
+        <span class="section__count" data-chapter-summary="${c.id}">${solved} 题有解答 · 共 ${total} 条答案</span>
       </div>
       <ul class="exercise-list">
 ${rows}
@@ -375,6 +375,7 @@ ${rows}
   searchIndex.push({
     t: `第 ${c.number} 章 · ${c.title}`,
     u: `/chapters/${c.id}/index.html`,
+    xc: c.id,
     k: `chapter ${c.number} ${c.id} ${c.title} ${c.titleZh}`,
     c: `${c.exercises.length} 道习题 · ${solved} 题有解答`,
   });
@@ -489,10 +490,13 @@ for (const c of course.chapters) {
     searchIndex.push({
       t: `习题 ${e.id} · ${e.title}`,
       u: `/chapters/${c.id}/${e.slug}.html`,
+      x: e.id,
       k: `${e.id} ${e.slug} ${e.title} chapter${c.number} ${c.id} ${(e.tags || []).join(" ")}`,
-      c: `第 ${c.number} 章 ${chapter.titleZh} · ${
-        list.length ? list.length + " 个同学答案" : "暂无同学答案"
-      }`,
+      c:
+        `第 ${c.number} 章` +
+        (chapter.titleZh ? ` ${chapter.titleZh}` : "") +
+        " · " +
+        (list.length ? list.length + " 个同学答案" : "暂无同学答案"),
     });
   });
 }
@@ -507,7 +511,7 @@ const wallBody = `  <div class="page-head">
     <div class="page-head__inner">
       <p class="breadcrumb"><a href="index.html">首页</a><span aria-hidden="true">/</span>全部答案</p>
       <h1>全部同学答案</h1>
-      <p class="page-head__meta">${
+      <p class="page-head__meta" data-wall-summary>${
         ANSWERS.length
           ? "共 " +
             ANSWERS.length +
