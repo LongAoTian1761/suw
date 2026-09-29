@@ -347,34 +347,285 @@
 
   function attachmentList(files) {
     if (!files || !files.length) return "";
+    var figures = [];
+    var chips = [];
+    files.forEach(function (f) {
+      /* 草稿还没有上传后的链接，只能显示成标签。 */
+      if (!fileUrl(f)) {
+        chips.push(fileChip(f));
+        return;
+      }
+      /* 图片（作图题的图表、手写推导的照片）和 PDF 直接在解答里显示出来，
+         其余文件仍然给一个下载链接。 */
+      if (isImageFile(f)) figures.push(figureBlock(f));
+      else if (isPdfFile(f)) figures.push(pdfBlock(f));
+      else chips.push(fileChip(f));
+    });
+    var html = "";
+    if (figures.length) {
+      html += '<div class="answer-figures">' + figures.join("") + "</div>";
+    }
+    if (chips.length) {
+      html += '<ul class="attachments">' + chips.join("") + "</ul>";
+    }
+    return html;
+  }
+
+  /* ------------------------------------------------------- attachments */
+
+  var IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+  var PDF_EXT_RE = /\.pdf$/i;
+
+  /* 附件是不是图片？看文件名，必要时回退到链接路径。 */
+  function isImageFile(f) {
+    if (!f) return false;
+    var name = String(f.name || "");
+    var link = String(f.url || "")
+      .split("?")[0]
+      .split("#")[0];
+    return IMAGE_EXT_RE.test(name) || IMAGE_EXT_RE.test(link);
+  }
+
+  function isPdfFile(f) {
+    if (!f) return false;
+    var name = String(f.name || "");
+    var link = String(f.url || "")
+      .split("?")[0]
+      .split("#")[0];
+    return PDF_EXT_RE.test(name) || PDF_EXT_RE.test(link);
+  }
+
+  /* 上传后的绝对链接；草稿返回空串。 */
+  function fileUrl(f) {
+    var raw = (f && f.url) || "";
+    return raw ? (/^https?:/.test(raw) ? raw : url(raw)) : "";
+  }
+
+  function fileChip(f) {
+    var href = fileUrl(f);
+    var inner =
+      ICONS.file +
+      "<span>" +
+      esc(f.name) +
+      "</span>" +
+      (f.size ? "<small>" + esc(f.size) + "</small>" : "");
+    /* A draft kept in this browser has no uploaded file behind it yet,
+       so render a plain chip instead of a dead link. */
+    if (!href) {
+      return '<li><span class="chip">' + inner + "</span></li>";
+    }
     return (
-      '<ul class="attachments">' +
-      files
-        .map(function (f) {
-          var raw = f.url || "";
-          var href = raw ? (/^https?:/.test(raw) ? raw : url(raw)) : "";
-          var inner =
-            ICONS.file +
-            "<span>" +
-            esc(f.name) +
-            "</span>" +
-            (f.size ? "<small>" + esc(f.size) + "</small>" : "");
-          /* A draft kept in this browser has no uploaded file behind it yet,
-             so render a plain chip instead of a dead link. */
-          if (!href) {
-            return '<li><span class="chip">' + inner + "</span></li>";
-          }
-          return (
-            "<li><a href=\"" +
-            escAttr(href) +
-            '" target="_blank" rel="noopener">' +
-            inner +
-            "</a></li>"
-          );
-        })
-        .join("") +
-      "</ul>"
+      '<li><a href="' +
+      escAttr(href) +
+      '" target="_blank" rel="noopener">' +
+      inner +
+      "</a></li>"
     );
+  }
+
+  function figureBlock(f) {
+    var href = fileUrl(f);
+    var name = f.name || "解答图片";
+    return (
+      '<figure class="answer-figure">' +
+      '<a class="answer-figure__link" href="' +
+      escAttr(href) +
+      '" target="_blank" rel="noopener">' +
+      '<img src="' +
+      escAttr(href) +
+      '" alt="' +
+      escAttr(name) +
+      '" loading="lazy" decoding="async">' +
+      "</a>" +
+      '<figcaption class="answer-figure__caption">' +
+      '<a class="answer-figure__name" href="' +
+      escAttr(href) +
+      '" target="_blank" rel="noopener">' +
+      esc(name) +
+      "</a>" +
+      (f.size ? "<small>" + esc(f.size) + "</small>" : "") +
+      '<span class="answer-figure__hint">点击看原图</span>' +
+      "</figcaption>" +
+      "</figure>"
+    );
+  }
+
+  /* ------------------------------------------- 正文里引用的本地图片 --- */
+
+  /* PDF 也直接嵌在解答里显示（浏览器自带的阅读器），下面留一个链接兜底。 */
+  function pdfBlock(f) {
+    var href = fileUrl(f);
+    var name = f.name || "附件 PDF";
+    return (
+      '<figure class="answer-figure answer-figure--pdf">' +
+      '<div class="answer-pdf__box">' +
+      '<p class="answer-pdf__state">正在加载 PDF 预览…</p>' +
+      '<iframe class="answer-pdf" data-pdf-src="' +
+      escAttr(href) +
+      '" title="' +
+      escAttr(name) +
+      '"></iframe>' +
+      "</div>" +
+      '<figcaption class="answer-figure__caption">' +
+      '<a class="answer-figure__name" href="' +
+      escAttr(href) +
+      '" target="_blank" rel="noopener">' +
+      esc(name) +
+      "</a>" +
+      (f.size ? "<small>" + esc(f.size) + "</small>" : "") +
+      '<span class="answer-figure__hint">在新窗口打开</span>' +
+      "</figcaption>" +
+      "</figure>"
+    );
+  }
+
+  /* 取路径里的文件名：fig.png、./图/fig.png、C:\x\fig.png 都得到 fig.png */
+  function baseName(p) {
+    return String(p || "")
+      .split("?")[0]
+      .split("#")[0]
+      .replace(/\\/g, "/")
+      .split("/")
+      .pop();
+  }
+
+  /* 很多人是把本地写好的 Markdown 整段粘进来的，里面会有
+     ![说明](fig_1_11.png) 这种本机路径。网站当然拿不到那个文件，
+     但只要附件里有一份同名文件，就把它换成附件上传后的地址。
+     （只用文件名匹配，不看目录，所以「数据/fig.png」也能对上「fig.png」。） */
+  function resolveBodyImages(html, files) {
+    if (!files || !files.length) return html;
+    var byName = {};
+    files.forEach(function (f) {
+      var link = fileUrl(f);
+      var key = baseName(f.name).toLowerCase();
+      if (link && key && !byName[key]) byName[key] = link;
+    });
+    return html.replace(/<img\s+src="([^"]*)"([^>]*)>/g, function (tag, src, rest) {
+      if (/^(https?:|data:)/i.test(src)) return tag;
+      var hit = byName[baseName(src).toLowerCase()];
+      if (!hit) return tag;
+      return '<img src="' + escAttr(hit) + '"' + rest + ">";
+    });
+  }
+
+  /* 解答正文 → HTML（顺带把能对上附件的图片补上真实地址） */
+  function bodyHtml(body, files) {
+    return resolveBodyImages(md(body), files);
+  }
+
+  /* ------------------------------------------------- 媒体加载与兜底 --- */
+
+  /* PDF 直接用 <iframe src=对象地址> 有个坑：浏览器只看服务器返回的
+     content-type。要是对象被存成 application/octet-stream，浏览器就会当成
+     下载文件，内嵌框里什么也画不出来（只剩我们自己设的底色）。
+     所以这里先把文件抓成 Blob，再按 application/pdf 重新包一层给浏览器，
+     这样服务器那边存的类型不对也能正常预览。抓不动就退回直接嵌。 */
+  function loadPdf(frame) {
+    var src = frame.getAttribute("data-pdf-src");
+    frame.removeAttribute("data-pdf-src");
+    if (!src) return;
+
+    var box = frame.closest(".answer-figure");
+    var state = box && box.querySelector(".answer-pdf__state");
+
+    function direct(note) {
+      /* 交给浏览器自己处理：服务器类型对的话这里就是能显示的 */
+      frame.src = src;
+      if (state) state.textContent = note;
+    }
+
+    if (!window.fetch || !window.Blob || !URL.createObjectURL) {
+      direct("");
+      return;
+    }
+
+    var settled = false;
+    var timer = setTimeout(function () {
+      if (settled) return;
+      settled = true;
+      direct("PDF 预览加载较慢，可以先点下面的文件名在新窗口打开");
+    }, 20000);
+
+    fetch(src)
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        var typed = new Blob([blob], { type: "application/pdf" });
+        var objUrl = URL.createObjectURL(typed);
+        keepObjectUrl(objUrl);
+        frame.src = objUrl;
+        if (state) state.remove();
+      })
+      .catch(function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        direct("点下面的文件名在新窗口打开");
+      });
+  }
+
+  /* 图片真加载失败时，再补一句到底是哪种失败：
+     服务器上找不到（404）、文件读不出来、还是网络/权限问题。
+     注意不能给"还没轮到加载"的图片定时限——图片是懒加载的，
+     视口外的图本来就还没开始请求，那样会误判成加载失败。 */
+  function explainImageError(src, done) {
+    if (!src || !window.fetch) return;
+    fetch(src, { method: "GET", headers: { Range: "bytes=0-0" } })
+      .then(function (res) {
+        done(
+          res.ok
+            ? "图片文件在服务器上读不出来，点文件名打开原文件"
+            : "图片在服务器上找不到（HTTP " + res.status + "），点文件名核对",
+        );
+      })
+      .catch(function () {
+        done("图片取不到（网络或权限问题），点文件名打开原文件");
+      });
+  }
+
+  var objectUrls = [];
+  function keepObjectUrl(u) {
+    objectUrls.push(u);
+  }
+  window.addEventListener("beforeunload", function () {
+    objectUrls.forEach(function (u) {
+      try {
+        URL.revokeObjectURL(u);
+      } catch (e) {
+        /* 忽略 */
+      }
+    });
+  });
+
+  /* 渲染好的 HTML 里凡是还没初始化的媒体都处理一遍 */
+  function hydrateMedia(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var frames = scope.querySelectorAll("iframe[data-pdf-src]");
+    for (var i = 0; i < frames.length; i++) loadPdf(frames[i]);
+  }
+
+  /* 页面任何位置插入新内容（答案列表、我的提交、老师批改页）都会自动接上 */
+  var hydrateQueued = false;
+  function scheduleHydrate() {
+    if (hydrateQueued) return;
+    hydrateQueued = true;
+    setTimeout(function () {
+      hydrateQueued = false;
+      hydrateMedia(document);
+    }, 60);
+  }
+
+  if (window.MutationObserver && document.documentElement) {
+    new MutationObserver(scheduleHydrate).observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   function answerCard(a, opts) {
@@ -395,9 +646,6 @@
       '<span class="answer-card__when">' +
       esc(a.date || "") +
       "</span>" +
-      (Number(a.revision) > 1
-        ? '<span class="answer-card__when">已修改 ' + Number(a.revision) + " 次</span>"
-        : "") +
       (a.mine ? '<span class="tag tag--mine">我的</span>' : "") +
       "</div>";
 
@@ -412,7 +660,7 @@
       head +
       (a.title ? '<h3 class="answer-card__title">' + esc(a.title) + "</h3>" : "") +
       '<div class="answer-card__body">' +
-      md(a.body) +
+      bodyHtml(a.body, a.attachments) +
       "</div>" +
       attachmentList(a.attachments) +
       (a.feedback
@@ -974,8 +1222,37 @@
     writeLocal: writeLocal,
     inlineData: inlineData,
     answerCard: answerCard,
+    attachmentList: attachmentList,
+    bodyHtml: bodyHtml,
+    isImageFile: isImageFile,
     ICONS: ICONS,
   };
+
+  /* 附件图片万一没加载出来（桶权限不对、文件被删），给一句提示，
+     而不是留一个破图标的空位。error 事件不冒泡，所以用捕获阶段监听。 */
+  document.addEventListener(
+    "error",
+    function (e) {
+      var el = e.target;
+      if (!el || el.tagName !== "IMG" || !el.closest) return;
+      var figure = el.closest(".answer-figure");
+      if (figure) {
+        figure.classList.add("answer-figure--broken");
+        var hint = figure.querySelector(".answer-figure__hint");
+        if (hint) hint.textContent = "图片没能加载，点文件名打开原文件";
+        explainImageError(el.getAttribute("src"), function (text) {
+          if (figure.classList.contains("answer-figure--broken") && hint) {
+            hint.textContent = text;
+          }
+        });
+        return;
+      }
+      if (el.closest(".answer-card__body, .preview-pane")) {
+        el.classList.add("img--broken");
+      }
+    },
+    true,
+  );
 
   /* Problem statements and reference solutions ship as escaped markdown in the
      page. They must be converted *now*, while this script runs during parsing,

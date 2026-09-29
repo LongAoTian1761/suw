@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>International Macroeconomics · 国际宏观经济学 · 课后题与解答</title>
-<meta name="description" content="面向课程的《国际宏观经济学》习题库：每道课后题都有独立页面，同学不需要注册就能直接上传自己的解答与附件，全班共享。">
+<title>老师批改 · 国际宏观经济学 · 课后题与解答</title>
+<meta name="description" content="教师登录后批改同学提交的课后题解答。">
 <link rel="stylesheet" href="./assets/css/site.css">
 <script>
 window.MathJax = {
@@ -27,7 +27,7 @@ window.MathJax = {
         <input type="search" id="site-search" placeholder="搜索习题 / 解答  ( / )" autocomplete="off" aria-label="搜索习题或解答">
         <div class="search-results" id="site-search-results" data-open="false" role="listbox"></div>
       </div>
-      <a class="nav__link" href="./index.html" aria-current="page">首页</a>
+      <a class="nav__link" href="./index.html">首页</a>
       <a class="nav__link" href="./answers.html">全部答案</a>
       <a class="nav__link nav__cta" href="./submit.html">上传答案</a>
       <a class="nav__link" href="#" target="_blank" rel="noopener">讨论区</a>
@@ -35,250 +35,53 @@ window.MathJax = {
   </div>
 </header>
 <main>
-  <div class="wrap">
-    <section class="hero">
-      <h1 class="hero__title">国际宏观经济学 · 课后题与解答</h1>
-      <p class="hero__lede">面向课程的《国际宏观经济学》习题库：每道课后题都有独立页面，同学不需要注册就能直接上传自己的解答与附件，全班共享。</p>
-      <p class="hero__lede" style="font-size:0.94rem;color:var(--muted);font-style:italic">Schmitt-Grohé, Uribe &amp; Woodford, International Macroeconomics (draft, May 25, 2021)</p>
-      <div class="hero__actions">
-        <a class="btn btn--primary" href="#chapters">浏览章节</a>
-        <a class="btn btn--outline" href="submit.html">上传我的答案</a>
-      </div>
-      <div class="hero__side">
-        <h2>这个网站怎么用</h2>
-        <ol>
-          <li>在下面找到你正在做的章节和习题，先看题面与参考思路。</li>
-          <li>把自己的完整推导写成 Markdown，公式用 <code>$...$</code> 包起来。</li>
-          <li>在习题页点「上传我的答案」，提交后由教师确认，随后展示给全班。</li>
-        </ol>
-      </div>
-    </section>
-  </div>
-
-  <div class="wrap">
-    <section class="section" id="chapters">
-      <div class="section__head">
-        <h2>📚 按章节浏览</h2>
-        <p>共 15 章、161 道习题</p>
-        <span class="section__count" data-stat-recent>本学期新增 0 条同学答案</span>
-      </div>
-      <ul class="chapter-list">
-      <li>
-        <a class="chapter-row" href="chapters/ch01/index.html">
-          <span class="chapter-row__num">第 1 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Global Imbalances</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">国际收支的记账方式、贸易余额与经常账户、净国际投资头寸、估值效应，以及“暗物质”之谜。</span>
-          </span>
-          <span class="chapter-row__meta">17 题 · <b data-chapter-solved="ch01">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li class="part-row">
-        <span class="part-row__numeral">Part I</span>
-        <span class="part-row__title">Determinants of the Current Account</span>
-        <span class="part-row__zh">经常账户的决定因素</span>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch02/index.html">
-          <span class="chapter-row__num">第 2 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Current Account Sustainability</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">一国能否永久维持贸易逆差或经常账户逆差；储蓄—投资缺口与经常账户的关系。</span>
-          </span>
-          <span class="chapter-row__meta">4 题 · <b data-chapter-solved="ch02">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch03/index.html">
-          <span class="chapter-row__num">第 3 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">An Intertemporal Theory of the Current Account</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">跨期预算约束、终身效用函数、消费的最优跨期配置、利率平价条件与小开放经济的均衡。</span>
-          </span>
-          <span class="chapter-row__meta">10 题 · <b data-chapter-solved="ch03">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch04/index.html">
-          <span class="chapter-row__num">第 4 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Terms of Trade, the World Interest Rate, Tariffs and the Current Account</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">贸易条件冲击与不完全信息、世界利率冲击、进口关税的临时/永久/预期变化。</span>
-          </span>
-          <span class="chapter-row__meta">8 题 · <b data-chapter-solved="ch04">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch05/index.html">
-          <span class="chapter-row__num">第 5 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Current Account Determination in a Production Economy</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">企业的投资决策、投资与储蓄曲线、生产经济的均衡，以及“巨型油田发现”的应用。</span>
-          </span>
-          <span class="chapter-row__meta">7 题 · <b data-chapter-solved="ch05">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch06/index.html">
-          <span class="chapter-row__num">第 6 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Uncertainty and the Current Account</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">大缓和、不确定性下的开放经济、完全资产市场与状态依存证券。</span>
-          </span>
-          <span class="chapter-row__meta">7 题 · <b data-chapter-solved="ch06">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch07/index.html">
-          <span class="chapter-row__num">第 7 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Large Open Economies</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">两国模型、国别冲击的国际传导、国家规模的作用，以及全球储蓄过剩假说。</span>
-          </span>
-          <span class="chapter-row__meta">9 题 · <b data-chapter-solved="ch07">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch08/index.html">
-          <span class="chapter-row__num">第 8 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">The Twin Deficits: Fiscal Deficits and the Current Account</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">含政府部门的开放经济、李嘉图等价、双赤字，以及财政政策的最优性。</span>
-          </span>
-          <span class="chapter-row__meta">11 题 · <b data-chapter-solved="ch08">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li class="part-row">
-        <span class="part-row__numeral">Part II</span>
-        <span class="part-row__title">The Real Exchange Rate</span>
-        <span class="part-row__zh">实际汇率</span>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch09/index.html">
-          <span class="chapter-row__num">第 9 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">The Real Exchange Rate and Purchasing Power Parity</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">一价定律、购买力平价、PPP 汇率、相对购买力平价，以及“边界有多宽”。</span>
-          </span>
-          <span class="chapter-row__meta">13 题 · <b data-chapter-solved="ch09">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch10/index.html">
-          <span class="chapter-row__num">第 10 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Determinants of the Real Exchange Rate</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">TNT 模型、贸易条件与实际汇率、突然停止、Balassa-Samuelson 效应与巴拉萨-萨缪尔森模型。</span>
-          </span>
-          <span class="chapter-row__meta">15 题 · <b data-chapter-solved="ch10">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li class="part-row">
-        <span class="part-row__numeral">Part III</span>
-        <span class="part-row__title">International Capital Mobility</span>
-        <span class="part-row__zh">国际资本流动</span>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch11/index.html">
-          <span class="chapter-row__num">第 11 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">International Capital Market Integration</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">抛补与非抛补利率平价、远期溢价之谜、实际利率平价与储蓄—投资相关性。</span>
-          </span>
-          <span class="chapter-row__meta">6 题 · <b data-chapter-solved="ch11">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch12/index.html">
-          <span class="chapter-row__num">第 12 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Capital Controls</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">资本管制与利率差、资本管制的宏观影响与福利后果、数量限制与最优资本管制。</span>
-          </span>
-          <span class="chapter-row__meta">19 题 · <b data-chapter-solved="ch12">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li class="part-row">
-        <span class="part-row__numeral">Part IV</span>
-        <span class="part-row__title">Monetary Policy and Exchange Rates</span>
-        <span class="part-row__zh">货币政策与汇率</span>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch13/index.html">
-          <span class="chapter-row__num">第 13 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Nominal Rigidity, Exchange Rate Policy, and Unemployment</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">TNT-DNWR 模型、固定与浮动汇率下的调整、货币政策三难困境与汇率超调。</span>
-          </span>
-          <span class="chapter-row__meta">13 题 · <b data-chapter-solved="ch13">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch14/index.html">
-          <span class="chapter-row__num">第 14 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Managing Currency Pegs</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">钉住汇率下的繁荣—萧条周期、货币挂钩的外部性、宏观审慎资本管制与财政贬值。</span>
-          </span>
-          <span class="chapter-row__meta">11 题 · <b data-chapter-solved="ch14">0</b> 题有解答</span>
-        </a>
-      </li>
-      <li>
-        <a class="chapter-row" href="chapters/ch15/index.html">
-          <span class="chapter-row__num">第 15 章</span>
-          <span class="chapter-row__body">
-            <span class="chapter-row__title">Inflationary Finance and Balance of Payments Crises</span>
-            <span class="chapter-row__zh"></span>
-            <span class="chapter-row__summary">货币数量论、铸币税与通胀税、固定汇率制度的可持续性与国际收支危机。</span>
-          </span>
-          <span class="chapter-row__meta">11 题 · <b data-chapter-solved="ch15">0</b> 题有解答</span>
-        </a>
-      </li>
-      </ul>
-    </section>
-  </div>
-
-  <section class="section section--band">
-    <div class="wrap">
-      <div class="section__head">
-        <h2>🆕 最新同学答案</h2>
-        <p>按提交时间排列</p>
-        <span class="section__count"><a href="answers.html">查看全部 →</a></span>
-      </div>
-      <div data-recent-answers data-limit="3"></div>
+  <div class="page-head">
+    <div class="page-head__inner">
+      <p class="breadcrumb"><a href="index.html">首页</a><span aria-hidden="true">/</span>老师批改</p>
+      <h1>老师批改</h1>
+      <p class="page-head__meta">用课程邮箱登录后，可以查看全部同学答案，填写等级和批语，也可以把不合适的作业撤下来。批语会公开显示在学生答案下面，等级只有作者本人看得到。</p>
     </div>
-  </section>
-
+  </div>
   <div class="wrap">
     <section class="section">
-      <div class="section__head">
-        <h2>✍️ 关于提交</h2>
+      <div class="admin-login" id="admin-login">
+        <h2>登录</h2>
+        <div class="field">
+          <label for="admin-email">邮箱</label>
+          <input type="email" id="admin-email" autocomplete="username" placeholder="你的邮箱">
+        </div>
+        <div class="field">
+          <label for="admin-password">密码</label>
+          <input type="password" id="admin-password" autocomplete="current-password" placeholder="密码">
+        </div>
+        <div class="admin-actions">
+          <button type="button" class="btn btn--primary" id="admin-signin">登录</button>
+          <span class="admin-msg" id="admin-login-msg"></span>
+        </div>
       </div>
-      <div class="prose">
-        <p>每一道习题下面都有一段属于你自己的空间。打开上传页面填好就可以直接提交，不需要注册账号，也不需要登录。提交后你的答案会立刻出现在对应习题下面。你也可以选择只提交给老师、不公开署名。</p>
-        <ul>
-          <li><strong>公式排版</strong>：行内公式写 <code>$c_t = y_t - r d_{t-1}$</code>，独立成行的公式用 <code>$$ ... $$</code>。</li>
-          <li><strong>附件</strong>：作图题的图表、手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起上传（单个 20 MB 以内），图片和 PDF 会直接显示在解答里。</li>
-          <li><strong>署名</strong>：可以填真名、昵称或"匿名"；填了班级或学号只对教师可见。</li>
-          <li><strong>更正</strong>：发现别人的解答有误，欢迎在习题页下方留言指出，或提交你自己的版本。</li>
-        </ul>
-        <div class="callout callout--action">
-          <p>准备好你的解答了吗？上传后它会出现在对应习题的"同学答案"里。</p>
-          <a class="btn btn--primary" href="submit.html">上传我的答案</a>
+
+      <div id="admin-panel" hidden>
+        <div class="admin-bar">
+          <span class="admin-msg" id="admin-who"></span>
+          <select id="admin-status" aria-label="按状态筛选">
+            <option value="">全部状态</option>
+            <option value="pending">待审核</option>
+            <option value="verified">已发布</option>
+            <option value="peer">同学解答</option>
+            <option value="alternative">另一种思路</option>
+            <option value="withdrawn">已撤回</option>
+            <option value="rejected">已撤下</option>
+          </select>
+          <input type="search" id="admin-search" placeholder="搜索姓名 / 学号 / 习题 / 正文关键词" autocomplete="off">
+          <button type="button" class="btn btn--outline btn--sm" id="admin-reload">刷新</button>
+          <span class="admin-msg" id="admin-count"></span>
+          <button type="button" class="btn btn--quiet btn--sm" id="admin-signout">退出登录</button>
+        </div>
+        <div class="admin-layout">
+          <div class="admin-list" id="admin-list"></div>
+          <div class="admin-detail" id="admin-detail">
+            <div class="admin-empty">左边选一条作业开始批改。</div>
+          </div>
         </div>
       </div>
     </section>
@@ -300,5 +103,6 @@ window.SEARCH_INDEX = [{"t":"首页 · 国际宏观经济学 · 课后题与解�
 <script type="application/json" id="answers-data">{"updated":"","answers":[]}</script>
 <script src="./assets/js/backend.js"></script>
 <script src="./assets/js/site.js"></script>
+<script src="./assets/js/admin.js"></script>
 </body>
 </html>
