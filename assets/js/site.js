@@ -646,6 +646,13 @@
       '<span class="answer-card__when">' +
       esc(a.date || "") +
       "</span>" +
+      /* 题号紧跟在日期后面：在「全部答案」这种把各章混在一起排的列表里，
+         一眼要先看出这是哪道题。习题页本身按题分组，用 hideExercise 关掉。 */
+      (!opts.hideExercise && a.exercise
+        ? '<span class="tag tag--count">' +
+          esc(a.exerciseLabel || "习题 " + a.exercise) +
+          "</span>"
+        : "") +
       (a.mine ? '<span class="tag tag--mine">我的</span>' : "") +
       "</div>";
 
@@ -672,11 +679,6 @@
           "</div>"
         : "") +
       '<div class="answer-card__foot">' +
-      (opts.hideExercise || !a.exercise
-        ? ""
-        : '<span class="tag tag--count">' +
-          esc(a.exerciseLabel || "习题 " + a.exercise) +
-          "</span>") +
       '<span class="tag ' +
       st.cls +
       '">' +
