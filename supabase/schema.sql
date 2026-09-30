@@ -283,3 +283,77 @@ create policy "anyone can read homework files"
 --      node scripts/grade-ui.mjs     # 批改界面
 --      node scripts/moderate.mjs     # 命令行
 -- ===========================================================================
+
+-- ===========================================================================
+--  6. 老师登录批改（网页版）
+--
+--  老师不需要装任何东西：打开 /admin.html，用自己的邮箱密码登录，就能批改。
+--  名单之外的人即使注册了账号，也读不到任何作业 —— 靠下面的 teachers 表控制。
+--
+--  添加老师（在 SQL Editor 里跑一句就行）：
+--      insert into public.teachers (email) values ('老师邮箱@example.edu')
+--      on conflict do nothing;
+-- ===========================================================================
+
+create table if not exists public.teachers (
+  email      text primary key,
+  note       text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.teachers enable row level security;
+
+-- 这张表任何人都读不到（包括已登录的人）——只有下面这个函数能读
+revoke all on public.teachers from anon, authenticated;
+
+-- 判断「当前登录的人是不是老师」
+create or replace function public.is_teacher()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.teachers t
+    where lower(t.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  )
+$$;
+
+revoke all on function public.is_teacher() from public;
+grant execute on function public.is_teacher() to authenticated;
+
+-- 老师能读到的列（不给 edit_token）
+revoke all on public.submissions from authenticated;
+grant select (
+  id, created_at, updated_at, exercise, author, author_note, title, body, tags,
+  attachments, status, helpful, feedback, grade, graded_at, revision
+) on public.submissions to authenticated;
+
+-- 老师能改的列：状态、等级、批语
+grant update (status, grade, feedback, graded_at) on public.submissions to authenticated;
+grant delete on public.submissions to authenticated;
+grant execute on function public.can_edit(uuid) to authenticated;
+
+drop policy if exists "teachers can read every submission" on public.submissions;
+create policy "teachers can read every submission"
+  on public.submissions
+  for select
+  to authenticated
+  using (public.is_teacher());
+
+drop policy if exists "teachers can grade" on public.submissions;
+create policy "teachers can grade"
+  on public.submissions
+  for update
+  to authenticated
+  using (public.is_teacher())
+  with check (public.is_teacher());
+
+drop policy if exists "teachers can delete" on public.submissions;
+create policy "teachers can delete"
+  on public.submissions
+  for delete
+  to authenticated
+  using (public.is_teacher());

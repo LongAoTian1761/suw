@@ -273,9 +273,9 @@ ${chapterRows}
         }你也可以选择只提交给老师、不公开署名。</p>
         <ul>
           <li><strong>公式排版</strong>：行内公式写 <code>$c_t = y_t - r d_{t-1}$</code>，独立成行的公式用 <code>$$ ... $$</code>。</li>
-          <li><strong>附件</strong>：手写推导的照片、MATLAB / Python / Dynare 代码、PDF 都可以一起上传（单个 ${
+          <li><strong>附件</strong>：作图题的图表、手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起上传（单个 ${
             sb.maxFileMb || 20
-          } MB 以内）。</li>
+          } MB 以内），图片和 PDF 会直接显示在解答里。</li>
           <li><strong>署名</strong>：可以填真名、昵称或"匿名"；填了班级或学号只对教师可见。</li>
           <li><strong>更正</strong>：发现别人的解答有误，欢迎在习题页下方留言指出，或提交你自己的版本。</li>
         </ul>
@@ -553,6 +553,82 @@ fs.writeFileSync(
 
 /* --- submit ----------------------------------------------------------- */
 
+/* --- admin（老师批改）-------------------------------------------------- */
+
+const adminBody = `  <div class="page-head">
+    <div class="page-head__inner">
+      <p class="breadcrumb"><a href="index.html">首页</a><span aria-hidden="true">/</span>老师批改</p>
+      <h1>老师批改</h1>
+      <p class="page-head__meta">用课程邮箱登录后，可以查看全部同学答案，填写等级和批语，也可以把不合适的作业撤下来。批语会公开显示在学生答案下面，等级只有作者本人看得到。</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <section class="section">
+      <div class="admin-login" id="admin-login">
+        <h2>登录</h2>
+        <div class="field">
+          <label for="admin-email">邮箱</label>
+          <input type="email" id="admin-email" autocomplete="username" placeholder="你的邮箱">
+        </div>
+        <div class="field">
+          <label for="admin-password">密码</label>
+          <input type="password" id="admin-password" autocomplete="current-password" placeholder="密码">
+        </div>
+        <div class="admin-actions">
+          <button type="button" class="btn btn--primary" id="admin-signin">登录</button>
+          <span class="admin-msg" id="admin-login-msg"></span>
+        </div>
+      </div>
+
+      <div id="admin-panel" hidden>
+        <div class="admin-bar">
+          <span class="admin-msg" id="admin-who"></span>
+          <select id="admin-status" aria-label="按状态筛选">
+            <option value="">全部状态</option>
+            <option value="pending">待审核</option>
+            <option value="verified">已发布</option>
+            <option value="peer">同学解答</option>
+            <option value="alternative">另一种思路</option>
+            <option value="withdrawn">已撤回</option>
+            <option value="rejected">已撤下</option>
+          </select>
+          <input type="search" id="admin-search" placeholder="搜索姓名 / 学号 / 习题 / 正文关键词" autocomplete="off">
+          <button type="button" class="btn btn--outline btn--sm" id="admin-reload">刷新</button>
+          <span class="admin-msg" id="admin-count"></span>
+          <button type="button" class="btn btn--quiet btn--sm" id="admin-signout">退出登录</button>
+        </div>
+        <div class="admin-layout">
+          <div class="admin-list" id="admin-list"></div>
+          <div class="admin-detail" id="admin-detail">
+            <div class="admin-empty">左边选一条作业开始批改。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>`;
+
+fs.writeFileSync(
+  path.join(root, "admin.html"),
+  page({
+    rootPrefix: ".",
+    active: "",
+    pageTitle: `老师批改 · ${site.titleZh}`,
+    description: "教师登录后批改同学提交的课后题解答。",
+    body: adminBody,
+    inlineAnswers: [],
+  }),
+);
+
+{
+  const p = path.join(root, "admin.html");
+  let html = fs.readFileSync(p, "utf8");
+  html = html.replace(
+    '<script src="./assets/js/site.js"></script>',
+    '<script src="./assets/js/site.js"></script>\n<script src="./assets/js/admin.js"></script>',
+  );
+  fs.writeFileSync(p, html);
+}
+
 const repoReady = site.repo && site.repo.indexOf("your-") !== 0;
 
 const configNotice = uploadReady
@@ -592,9 +668,9 @@ const submitBody = `  <div class="page-head">
           </li>
           <li>
             <h3>把附件拖进来（可选）</h3>
-            <p>手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起传，${
+            <p>作图题的图表、手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起传，${
               sb.maxFileMb || 20
-            } MB 以内。</p>
+            } MB 以内。图片和 PDF 会直接显示在解答里，不需要点开链接；代码、压缩包这类文件仍然给下载链接。</p>
           </li>
           <li>
             <h3>点「提交我的答案」</h3>
@@ -670,7 +746,7 @@ const submitBody = `  <div class="page-head">
 
           <div class="field field--wide">
             <label for="f-body">答案正文 <span class="req">*</span></label>
-            <span class="field__hint">支持 Markdown 与 LaTeX。行内公式 <code>$c_t = y_t - r d_{t-1}$</code>，独立公式用 <code>$$ … $$</code>；<code>- </code> 开头是列表，<code>**加粗**</code> 可以强调关键结论。</span>
+            <span class="field__hint">支持 Markdown 与 LaTeX。行内公式 <code>$c_t = y_t - r d_{t-1}$</code>，独立公式用 <code>$$ … $$</code>；<code>- </code> 开头是列表，<code>**加粗**</code> 可以强调关键结论。<strong>本地的 Markdown 可以整段粘进来</strong>：正文里的 <code>![说明](fig_1_11.png)</code> 只要附件里有一份<strong>同名文件</strong>，网站会自动换成你上传的那张图；没有同名附件时，插图位置会提示「图片没能加载」。图片链接也可以直接写完整的 <code>https://</code> 地址。</span>
             <textarea id="f-body" name="answer" required placeholder="第一步，写出家庭的跨期预算约束：&#10;&#10;$$ \\sum_{j=0}^{\\infty} \\frac{c_{t+j}}{(1+r)^j} = (1+r)a_{t-1} + \\sum_{j=0}^{\\infty} \\frac{y_{t+j}}{(1+r)^j} $$&#10;&#10;因为禀赋服从 AR(1) 过程，所以……"></textarea>
             <span class="field__error">答案正文至少需要 10 个字符。</span>
           </div>
@@ -685,7 +761,7 @@ const submitBody = `  <div class="page-head">
             <span class="field__hint" id="f-kept"></span>
             <div class="dropzone" id="f-dropzone" tabindex="0" role="button" aria-describedby="f-files-hint">
               <strong>把文件拖到这里，或点击选择</strong>
-              <span id="f-files-hint">支持 PDF、图片（PNG / JPG）、MATLAB / Python / Dynare 代码，单个文件不超过 20 MB</span>
+              <span id="f-files-hint">支持 PDF、图片（PNG / JPG）、MATLAB / Python / Dynare 代码，单个文件不超过 20 MB。<strong>图片和 PDF 会直接显示在解答里</strong>，其余文件给下载链接；文件名和正文里 <code>![…](…)</code> 写的名字一致时还会自动对上。</span>
             </div>
             <input type="file" id="f-files" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.m,.py,.mod,.ipynb,.csv,.txt,.md,.docx,.zip" style="display:none">
             <ul class="file-list" id="f-file-list"></ul>

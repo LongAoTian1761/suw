@@ -1120,6 +1120,143 @@ h3 {
   font-size: 0.74rem;
 }
 
+/* 图表、手写的照片这类图片附件：直接显示在解答里，而不是只给一个下载链接。 */
+
+.answer-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.answer-figure {
+  /* 图表题大多是宽图，整宽显示才看得清 */
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.answer-figure__link {
+  display: block;
+  line-height: 0;
+  background: var(--band);
+}
+
+/* PDF 附件：用浏览器自带的阅读器直接嵌进解答里 */
+.answer-pdf__box {
+  background: var(--band);
+}
+
+.answer-pdf__state {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.answer-pdf {
+  display: block;
+  width: 100%;
+  height: 520px;
+  border: 0;
+  background: var(--band);
+}
+
+/* 预览还没准备好时不要把高度撑出来，免得露出一块空白 */
+.answer-pdf:not([src]) {
+  height: 0;
+}
+
+.answer-figure--pdf-fallback .answer-pdf__state {
+  padding: 18px 14px;
+  color: var(--peer);
+}
+
+.answer-figure img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.answer-figure__caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.answer-figure__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
+}
+
+.answer-figure__name:hover {
+  color: var(--brand);
+}
+
+.answer-figure__caption small {
+  flex: none;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.answer-figure__hint {
+  flex: none;
+  color: var(--link);
+}
+
+/* 图片没加载出来时，至少把文件名链接留在那里。 */
+.answer-figure--broken .answer-figure__link {
+  display: none;
+}
+
+.answer-figure--broken .answer-figure__caption {
+  border-top: 0;
+}
+
+.answer-figure--broken .answer-figure__name {
+  color: var(--peer);
+}
+
+.answer-figure--broken .answer-figure__hint {
+  color: var(--peer);
+}
+
+/* 正文里用 Markdown 写的图片（链接必须是完整的 http/https 地址） */
+
+.answer-card__body img,
+.preview-pane img {
+  display: block;
+  max-width: 100%;
+  max-height: 480px;
+  margin: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.answer-card__body img.img--broken,
+.preview-pane img.img--broken {
+  min-height: 68px;
+  border-style: dashed;
+  border-color: var(--line-strong);
+}
+
 /* ------------------------------------------------------------- answers pg */
 
 .filters {
@@ -1312,6 +1449,17 @@ h3 {
   color: var(--faint);
   font-family: var(--font-mono);
   font-size: 0.75rem;
+}
+
+/* 选好的图片先给个小缩略图，确认没传错图 */
+.file-list__thumb {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #fff;
 }
 
 .file-list button {
@@ -1548,6 +1696,236 @@ mjx-container {
 
 /* ------------------------------------------------------------ responsive */
 
+/* ---------------------------------------------------------- 老师批改页 */
+
+.admin-login {
+  max-width: 420px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 24px;
+}
+
+.admin-login h2 {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.admin-login .field {
+  margin-bottom: 14px;
+}
+
+.admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.admin-bar input,
+.admin-bar select {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 8px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.admin-bar input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 940px) {
+  .admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-list {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.admin-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 11px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.admin-item:hover {
+  background: var(--brand-tint);
+}
+
+.admin-item[aria-selected="true"] {
+  background: var(--brand-tint);
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+
+.admin-item__top {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.86rem;
+}
+
+.admin-item__ex {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.admin-item__who {
+  font-weight: 600;
+}
+
+.admin-item__sub {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.admin-detail {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  min-height: 200px;
+}
+
+.admin-detail h2 {
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.admin-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.admin-answer {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-form {
+  border-top: 2px solid var(--line-strong);
+  padding-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.admin-form label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 8px 11px;
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.admin-form textarea {
+  min-height: 110px;
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.admin-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 160px;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .admin-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-msg {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.admin-msg[data-tone="ok"] {
+  color: var(--official);
+}
+
+.admin-msg[data-tone="warn"] {
+  color: #b42318;
+}
+
+.admin-empty {
+  color: var(--muted);
+  font-size: 0.92rem;
+  padding: 22px 6px;
+}
+
+.admin-empty p {
+  margin-top: 8px;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--pending-tint);
+  color: var(--pending);
+}
+
+.pill--verified,
+.pill--peer,
+.pill--alternative {
+  background: var(--official-tint);
+  color: var(--official);
+}
+
+.pill--withdrawn,
+.pill--rejected {
+  background: #fdecea;
+  color: #b42318;
+}
+
 @media (max-width: 860px) {
   body {
     font-size: 16px;
@@ -1653,6 +2031,9 @@ mjx-container {
 }
 
 @media (max-width: 520px) {
+  .answer-pdf {
+    height: 360px;
+  }
   .exercise-row {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1675,6 +2056,11 @@ mjx-container {
   .callout--action,
   .block--submit {
     display: none !important;
+  }
+
+  /* 打印时 PDF 阅读器没有意义，直接留个说明 */
+  .answer-pdf {
+    display: none;
   }
 
   body {

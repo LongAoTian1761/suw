@@ -59,7 +59,7 @@ window.MathJax = {
           </li>
           <li>
             <h3>把附件拖进来（可选）</h3>
-            <p>手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起传，20 MB 以内。</p>
+            <p>作图题的图表、手写推导的照片、PDF、MATLAB / Python / Dynare 代码都可以一起传，20 MB 以内。图片和 PDF 会直接显示在解答里，不需要点开链接；代码、压缩包这类文件仍然给下载链接。</p>
           </li>
           <li>
             <h3>点「提交我的答案」</h3>
@@ -123,7 +123,7 @@ window.MathJax = {
 
           <div class="field field--wide">
             <label for="f-body">答案正文 <span class="req">*</span></label>
-            <span class="field__hint">支持 Markdown 与 LaTeX。行内公式 <code>$c_t = y_t - r d_{t-1}$</code>，独立公式用 <code>$$ … $$</code>；<code>- </code> 开头是列表，<code>**加粗**</code> 可以强调关键结论。</span>
+            <span class="field__hint">支持 Markdown 与 LaTeX。行内公式 <code>$c_t = y_t - r d_{t-1}$</code>，独立公式用 <code>$$ … $$</code>；<code>- </code> 开头是列表，<code>**加粗**</code> 可以强调关键结论。<strong>本地的 Markdown 可以整段粘进来</strong>：正文里的 <code>![说明](fig_1_11.png)</code> 只要附件里有一份<strong>同名文件</strong>，网站会自动换成你上传的那张图；没有同名附件时，插图位置会提示「图片没能加载」。图片链接也可以直接写完整的 <code>https://</code> 地址。</span>
             <textarea id="f-body" name="answer" required placeholder="第一步，写出家庭的跨期预算约束：&#10;&#10;$$ \sum_{j=0}^{\infty} \frac{c_{t+j}}{(1+r)^j} = (1+r)a_{t-1} + \sum_{j=0}^{\infty} \frac{y_{t+j}}{(1+r)^j} $$&#10;&#10;因为禀赋服从 AR(1) 过程，所以……"></textarea>
             <span class="field__error">答案正文至少需要 10 个字符。</span>
           </div>
@@ -138,7 +138,7 @@ window.MathJax = {
             <span class="field__hint" id="f-kept"></span>
             <div class="dropzone" id="f-dropzone" tabindex="0" role="button" aria-describedby="f-files-hint">
               <strong>把文件拖到这里，或点击选择</strong>
-              <span id="f-files-hint">支持 PDF、图片（PNG / JPG）、MATLAB / Python / Dynare 代码，单个文件不超过 20 MB</span>
+              <span id="f-files-hint">支持 PDF、图片（PNG / JPG）、MATLAB / Python / Dynare 代码，单个文件不超过 20 MB。<strong>图片和 PDF 会直接显示在解答里</strong>，其余文件给下载链接；文件名和正文里 <code>![…](…)</code> 写的名字一致时还会自动对上。</span>
             </div>
             <input type="file" id="f-files" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.m,.py,.mod,.ipynb,.csv,.txt,.md,.docx,.zip" style="display:none">
             <ul class="file-list" id="f-file-list"></ul>

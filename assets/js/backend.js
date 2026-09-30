@@ -115,6 +115,39 @@
 
   /* -------------------------------------------------------------- files */
 
+  var MIME_BY_EXT = {
+    pdf: "application/pdf",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    bmp: "image/bmp",
+    avif: "image/avif",
+    txt: "text/plain; charset=utf-8",
+    md: "text/markdown; charset=utf-8",
+    csv: "text/csv; charset=utf-8",
+    json: "application/json",
+    py: "text/x-python; charset=utf-8",
+    m: "text/plain; charset=utf-8",
+    mod: "text/plain; charset=utf-8",
+    ipynb: "application/json",
+    zip: "application/zip",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  };
+
+  /* 有的拖拽来源不给 MIME 类型，上传时就变成 application/octet-stream，
+     浏览器拿到 PDF 会当下载处理、嵌在页面里就是一片空白。按扩展名补上。 */
+  function mimeFor(file) {
+    if (file.type) return file.type;
+    var ext = String(file.name || "")
+      .split(".")
+      .pop()
+      .toLowerCase();
+    return MIME_BY_EXT[ext] || "application/octet-stream";
+  }
+
   function uploadOne(file, exercise, index) {
     var path =
       exercise +
@@ -130,7 +163,7 @@
     return fetch(URL_BASE + "/storage/v1/object/" + BUCKET + "/" + encodeURI(path), {
       method: "POST",
       headers: authHeaders({
-        "content-type": file.type || "application/octet-stream",
+        "content-type": mimeFor(file),
         "cache-control": "max-age=3600",
         "x-upsert": "false",
       }),

@@ -107,7 +107,18 @@
       return;
     }
     pane.removeAttribute("data-empty");
-    pane.innerHTML = OEM.md(raw);
+    /* 正文里 ![说明](fig.png) 这种本机路径，在预览里用刚选好的本地文件顶上去，
+       这样提交之前就能看出图片会显示在哪儿。 */
+    revokeBodyUrls();
+    var owned = files.map(function (f) {
+      if (!isImage(f) || !window.URL || !URL.createObjectURL) {
+        return { name: f.name, url: "" };
+      }
+      var u = URL.createObjectURL(f);
+      bodyUrls.push(u);
+      return { name: f.name, url: u };
+    });
+    pane.innerHTML = OEM.bodyHtml(raw, owned);
     OEM.typeset();
   }
 
@@ -128,6 +139,7 @@
 
   function renderFiles() {
     if (!els["f-file-list"]) return;
+    revokePreviews();
     var html = kept
       .map(function (f, i) {
         return (
@@ -139,7 +151,7 @@
     html += files
       .map(function (f, i) {
         return (
-          "<li>" + OEM.ICONS.file + "<span>" + OEM.esc(f.name) + "</span><small>" +
+          "<li>" + thumbFor(f) + "<span>" + OEM.esc(f.name) + "</span><small>" +
           OEM.esc(fmtSize(f.size)) + "</small>" +
           '<button type="button" data-drop="' + i + '">移除</button></li>'
         );
@@ -147,10 +159,47 @@
       .join("");
     els["f-file-list"].innerHTML = html;
     if (els["f-kept"]) {
-      els["f-kept"].textContent = kept.length
-        ? "已有 " + kept.length + " 个附件（可单独移除）"
-        : "";
+      var notes = [];
+      if (kept.length) notes.push("已有 " + kept.length + " 个附件（可单独移除）");
+      var images = kept.filter(isImage).length;
+      if (images) notes.push("其中 " + images + " 张图片会直接显示在解答里");
+      els["f-kept"].textContent = notes.join("，");
     }
+  }
+
+  /* 图片附件在表单里也给一个小缩略图，方便确认选对了图。 */
+  var thumbUrls = [];
+  var bodyUrls = [];
+
+  function revokeAll(list) {
+    list.forEach(function (u) {
+      try {
+        URL.revokeObjectURL(u);
+      } catch (e) {
+        /* 忽略：个别浏览器不支持就当作没有缩略图 */
+      }
+    });
+  }
+
+  function revokePreviews() {
+    revokeAll(thumbUrls);
+    thumbUrls = [];
+  }
+
+  function revokeBodyUrls() {
+    revokeAll(bodyUrls);
+    bodyUrls = [];
+  }
+
+  function isImage(f) {
+    return !!(OEM.isImageFile && OEM.isImageFile(f));
+  }
+
+  function thumbFor(f) {
+    if (!isImage(f) || !window.URL || !URL.createObjectURL) return OEM.ICONS.file;
+    var u = URL.createObjectURL(f);
+    thumbUrls.push(u);
+    return '<img class="file-list__thumb" src="' + u + '" alt="">';
   }
 
   function addFiles(list) {
@@ -166,6 +215,7 @@
       if (!dup) files.push(f);
     });
     renderFiles();
+    refreshPreview();
     setStatus(files.length + kept.length ? "已选择附件。" : "", "");
   }
 
@@ -206,12 +256,14 @@
       if (dropKept) {
         kept.splice(Number(dropKept.getAttribute("data-drop-kept")), 1);
         renderFiles();
+        refreshPreview();
         return;
       }
       var drop = e.target.closest("[data-drop]");
       if (drop) {
         files.splice(Number(drop.getAttribute("data-drop")), 1);
         renderFiles();
+        refreshPreview();
       }
     });
   }
@@ -400,10 +452,10 @@
           (exerciseTitle(a.exercise) ? " · " + OEM.esc(exerciseTitle(a.exercise)) : "") +
           "</span>" +
           '<span class="answer-card__when">' + OEM.esc(a.date || "") + "</span>" +
-          (a.revision > 1 ? '<span class="answer-card__when">已修改 ' + a.revision + " 次</span>" : "") +
           "</div>" +
           (a.title ? '<h3 class="answer-card__title">' + OEM.esc(a.title) + "</h3>" : "") +
-          '<div class="answer-card__body">' + OEM.md(a.body) + "</div>" +
+          '<div class="answer-card__body">' + OEM.bodyHtml(a.body, a.attachments) + "</div>" +
+          OEM.attachmentList(a.attachments) +
           (a.feedback
             ? '<div class="feedback"><span class="feedback__label">教师批语</span>' +
               '<div class="feedback__body">' + OEM.md(a.feedback) + "</div></div>"
