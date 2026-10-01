@@ -69,7 +69,7 @@ window.MathJax = {
 </head>`;
 }
 
-function header(rootPrefix, active) {
+function header(rootPrefix, active, opts) {
   const link = (href, label, key, cls) =>
     `<a class="nav__link${cls ? " " + cls : ""}" href="${rootPrefix}${href}"${
       active === key ? ' aria-current="page"' : ""
@@ -94,6 +94,12 @@ function header(rootPrefix, active) {
       ${link("/answers.html", "全部答案", "answers")}
       ${link("/submit.html", "上传答案", "submit", "nav__cta")}
       ${
+        /* 只有批改页自己才显示这个入口，公开页面不暴露它 */
+        opts && opts.admin
+          ? `<a class="nav__link" href="${rootPrefix}/admin.html" aria-current="page">批改台</a>`
+          : ""
+      }
+      ${
         discussions
           ? `<a class="nav__link" href="${discussions}" target="_blank" rel="noopener">讨论区</a>`
           : ""
@@ -115,14 +121,14 @@ function footer(rootPrefix) {
 </footer>`;
 }
 
-function page({ rootPrefix, active, pageTitle, title, description, body, inlineAnswers }) {
+function page({ rootPrefix, active, pageTitle, title, description, body, inlineAnswers, admin }) {
   const inline =
     inlineAnswers === undefined
       ? ""
       : jsonScript("answers-data", { updated: answersFile.updated, answers: inlineAnswers });
   return `${head({ title: site.title, description, rootPrefix, pageTitle })}
 <body>
-${header(rootPrefix, active)}
+${header(rootPrefix, active, { admin: admin })}
 <main>
 ${body}
 </main>
@@ -620,6 +626,7 @@ fs.writeFileSync(
     description: "教师登录后批改同学提交的课后题解答。",
     body: adminBody,
     inlineAnswers: [],
+    admin: true,
   }),
 );
 
