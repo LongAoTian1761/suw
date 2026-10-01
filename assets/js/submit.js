@@ -552,8 +552,23 @@
       }
 
       var withdraw = t.hasAttribute("data-withdraw");
-      if (withdraw && !window.confirm("撤回后这条答案会从网站上消失，记录仍保留，你随时可以恢复。确定撤回吗？")) {
+      /* 用按钮自己的两步确认，不用 window.confirm：内置浏览器会把原生弹窗
+         直接吞掉并返回 false，表现就是「点了没反应」。 */
+      if (withdraw && t.getAttribute("data-confirm") !== "1") {
+        t.setAttribute("data-confirm", "1");
+        t.textContent = "确定撤回？";
+        clearTimeout(t.__confirmTimer);
+        t.__confirmTimer = setTimeout(function () {
+          if (!t.isConnected) return;
+          t.removeAttribute("data-confirm");
+          t.textContent = "撤回";
+        }, 6000);
+        setStatus("再点一次「确定撤回？」即可撤回。", "");
         return;
+      }
+      if (withdraw) {
+        clearTimeout(t.__confirmTimer);
+        t.removeAttribute("data-confirm");
       }
       t.disabled = true;
       BACKEND.setStatus(id, withdraw ? "withdrawn" : "verified")

@@ -335,7 +335,8 @@
     });
 
     document.getElementById("g-hide").addEventListener("click", function () {
-      if (!window.confirm("撤下后这条作业会从网站上消失，记录仍保留。确定吗？")) return;
+      /* 不用 window.confirm：内置浏览器会把原生弹窗吞掉，点了没反应 */
+      if (!twice(this, "确定撤下？")) return;
       note("处理中…");
       save(r.id, { status: "rejected" })
         .then(function () { note("已撤下。", "ok"); })
@@ -343,12 +344,32 @@
     });
 
     document.getElementById("g-delete").addEventListener("click", function () {
-      if (!window.confirm("删除后无法恢复，确定要彻底删除这条吗？")) return;
+      if (!twice(this, "确定彻底删除？")) return;
       note("删除中…");
       remove(r.id)
         .then(function () { note("已删除。", "ok"); })
         .catch(function (e) { note(e.message, "warn"); });
     });
+  }
+
+  /* 两步确认：第一次点改成「确定…？」，第二次点才真的执行。
+     比 window.confirm 可靠——有些内置浏览器直接屏蔽原生弹窗。 */
+  function twice(button, confirmLabel) {
+    if (button.getAttribute("data-confirm") === "1") {
+      button.removeAttribute("data-confirm");
+      button.textContent = button.getAttribute("data-label") || button.textContent;
+      return true;
+    }
+    button.setAttribute("data-label", button.textContent);
+    button.setAttribute("data-confirm", "1");
+    button.textContent = confirmLabel;
+    setTimeout(function () {
+      if (button.getAttribute("data-confirm") === "1") {
+        button.removeAttribute("data-confirm");
+        button.textContent = button.getAttribute("data-label");
+      }
+    }, 6000);
+    return false;
   }
 
   /* -------------------------------------------------------------- 入口 */
