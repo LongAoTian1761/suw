@@ -77,7 +77,7 @@ function header(rootPrefix, active) {
   const discussions =
     site.repo && site.repo.indexOf("your-") !== 0
       ? `https://github.com/${site.repo}/issues`
-      : "#";
+      : "";
   return `<header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href="${rootPrefix}/index.html">
@@ -93,7 +93,11 @@ function header(rootPrefix, active) {
       ${link("/index.html", "首页", "home")}
       ${link("/answers.html", "全部答案", "answers")}
       ${link("/submit.html", "上传答案", "submit", "nav__cta")}
-      <a class="nav__link" href="${discussions}" target="_blank" rel="noopener">讨论区</a>
+      ${
+        discussions
+          ? `<a class="nav__link" href="${discussions}" target="_blank" rel="noopener">讨论区</a>`
+          : ""
+      }
     </nav>
   </div>
 </header>`;
