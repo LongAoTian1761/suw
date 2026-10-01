@@ -41,6 +41,69 @@
 
   var rows = [];
   var current = null;
+  var QUESTIONS = {}; /* 题号 → 题面，用来在批改时对照 */
+
+  /* 题库是静态文件，直接取来用；取不到也不影响批改，只是看不到题面 */
+  function loadQuestions() {
+    return fetch(OEM.url("data/course.json"))
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .then(function (data) {
+        if (!data || !data.chapters) return;
+        data.chapters.forEach(function (chapter) {
+          (chapter.exercises || []).forEach(function (exercise) {
+            QUESTIONS[exercise.id] = {
+              title: exercise.title,
+              titleZh: exercise.titleZh,
+              problem: exercise.problem,
+              problemZh: exercise.problemZh,
+              figures: exercise.figures || [],
+            };
+          });
+        });
+      })
+      .catch(function () {
+        /* 忽略：没题面也能批改 */
+      });
+  }
+
+  /* 批改页的题目对照块：老师得先看到题，才知道学生在答什么 */
+  function questionBlock(id) {
+    var q = QUESTIONS[id];
+    if (!q) return '<div class="admin-question" data-pending="1" hidden></div>';
+    var figures = (q.figures || [])
+      .map(function (f) {
+        return (
+          '<figure class="admin-question__fig"><img src="' +
+          OEM.escAttr(OEM.url(f.src)) +
+          '" alt="' +
+          OEM.escAttr(f.caption || "") +
+          '" loading="lazy"><figcaption>' +
+          OEM.esc(f.caption || "") +
+          "</figcaption></figure>"
+        );
+      })
+      .join("");
+    return (
+      '<details class="admin-question" open>' +
+      "<summary>题目 " +
+      OEM.esc(id) +
+      (q.titleZh ? " · " + OEM.esc(q.titleZh) : q.title ? " · " + OEM.esc(q.title) : "") +
+      "</summary>" +
+      '<div class="admin-question__body">' +
+      figures +
+      '<div class="admin-question__text">' +
+      OEM.md(q.problemZh || q.problem || "") +
+      "</div>" +
+      (q.problem && q.problemZh
+        ? '<details class="admin-question__en"><summary>英文原文</summary><div class="admin-question__text">' +
+          OEM.md(q.problem) +
+          "</div></details>"
+        : "") +
+      "</div></details>"
+    );
+  }
 
   /* ------------------------------------------------------------ 会话 */
 
@@ -285,6 +348,7 @@
       (r.revision > 1 ? "　第 " + r.revision + " 版" : "") +
       "</p>" +
       (r.title ? "<h3>" + OEM.esc(r.title) + "</h3>" : "") +
+      questionBlock(r.exercise) +
       '<div class="admin-answer">' + OEM.bodyHtml(r.body, r.attachments) + "</div>" +
       /* 和习题页用同一套渲染：图片附件直接显示，其它文件给下载链接 */
       OEM.attachmentList(r.attachments) +
@@ -474,6 +538,16 @@
     return;
   }
 
+  /* 先把题库拉下来，批改时才看得到题面 */
+  var questionsReady = loadQuestions();
+
   if (session()) enter();
   else showPanel(false);
+
+  /* 题库到位后，如果正开着某条作业而题面还没显示，重画一次 */
+  questionsReady.then(function () {
+    if (current && document.querySelector("#admin-detail .admin-question[data-pending]")) {
+      open(current.id);
+    }
+  });
 })();

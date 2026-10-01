@@ -1259,6 +1259,73 @@ h3 {
 
 /* ------------------------------------------------------------- answers pg */
 
+/* 批改页里的题目对照块 */
+.admin-question {
+  margin: 4px 0 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-sm);
+  background: var(--band);
+  padding: 10px 14px;
+}
+
+.admin-question > summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.admin-question__body {
+  margin-top: 10px;
+}
+
+.admin-question__text {
+  font-size: 0.94rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+
+.admin-question__text p:first-child {
+  margin-top: 0;
+}
+
+.admin-question__text p:last-child {
+  margin-bottom: 0;
+}
+
+.admin-question__en {
+  margin-top: 10px;
+  border-top: 1px dashed var(--line-strong);
+  padding-top: 8px;
+}
+
+.admin-question__en > summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.admin-question__fig {
+  margin: 0 0 10px;
+}
+
+.admin-question__fig img {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.admin-question__fig figcaption {
+  font-size: 0.74rem;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
