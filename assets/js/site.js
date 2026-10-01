@@ -958,6 +958,27 @@
 
   /* -------------------------------------------------------------- boot  */
 
+  /* 在这台设备上登录过批改台的老师，导航栏会自动多一个「批改台」入口。
+     标记是登录成功时由 admin.js 写进本机 localStorage 的，学生看不到。 */
+  function initTeacherLink() {
+    var flagged = false;
+    try {
+      flagged = localStorage.getItem("oem-teacher-device") === "1";
+    } catch (e) {
+      return;
+    }
+    if (!flagged) return;
+    if (/(^|\/)admin\.html$/.test(location.pathname)) return; /* 已在批改页 */
+    var nav = document.getElementById("site-nav");
+    if (!nav || nav.querySelector("[data-teacher-link]")) return;
+    var a = document.createElement("a");
+    a.className = "nav__link nav__link--teacher";
+    a.setAttribute("data-teacher-link", "1");
+    a.href = url("admin.html");
+    a.textContent = "批改台";
+    nav.appendChild(a);
+  }
+
   /* Problem statements and reference solutions are shipped as escaped
      markdown inside the HTML, so the same renderer handles them. */
   function renderMarkdownBlocks() {
@@ -974,6 +995,7 @@
 
   function boot() {
     initNav();
+    initTeacherLink();
     initSearch();
     markStatsPending();
     loadAnswers().then(function (payload) {

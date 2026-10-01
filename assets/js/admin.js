@@ -127,6 +127,22 @@
     } catch (e) {}
   }
 
+  /* 登录成功的老师，本机留个标记：公开页面的导航栏会据此多出一个
+     「批改台」入口，学生那台设备没有这个标记，也就看不到。 */
+  var TEACHER_KEY = "oem-teacher-device";
+
+  function markTeacher() {
+    try {
+      localStorage.setItem(TEACHER_KEY, "1");
+    } catch (e) {}
+  }
+
+  function clearTeacherFlag() {
+    try {
+      localStorage.removeItem(TEACHER_KEY);
+    } catch (e) {}
+  }
+
   function headers(extra) {
     var s = session();
     var h = { apikey: KEY, accept: "application/json", "content-type": "application/json" };
@@ -451,6 +467,7 @@
     showPanel(true);
     isTeacher().then(function (ok) {
       if (!ok) {
+        clearTeacherFlag();
         if (els["admin-detail"]) {
           els["admin-detail"].innerHTML =
             '<div class="admin-empty"><strong>这个账号不在老师名单里</strong>' +
@@ -461,6 +478,7 @@
         }
         return;
       }
+      markTeacher();
       load().catch(function (e) {
         if (els["admin-detail"]) {
           els["admin-detail"].innerHTML =
@@ -508,6 +526,7 @@
   if (els["admin-signout"]) {
     els["admin-signout"].addEventListener("click", function () {
       clearSession();
+      clearTeacherFlag();
       rows = [];
       current = null;
       showPanel(false);

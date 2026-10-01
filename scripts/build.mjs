@@ -70,6 +70,7 @@ window.MathJax = {
 }
 
 function header(rootPrefix, active, opts) {
+  const isAdmin = !!(opts && opts.admin);
   const link = (href, label, key, cls) =>
     `<a class="nav__link${cls ? " " + cls : ""}" href="${rootPrefix}${href}"${
       active === key ? ' aria-current="page"' : ""
@@ -78,6 +79,23 @@ function header(rootPrefix, active, opts) {
     site.repo && site.repo.indexOf("your-") !== 0
       ? `https://github.com/${site.repo}/issues`
       : "";
+  /* 批改页用自己的一套导航：只有「批改台」，外加一个开新标签看学生页面的入口。
+     公开页面那几个链接一律不放，避免老师点了就跳走、回不来。 */
+  const navInner = isAdmin
+    ? `<a class="nav__link" href="${rootPrefix}/admin.html" aria-current="page">批改台</a>
+      <a class="nav__link" href="${rootPrefix}/index.html" target="_blank" rel="noopener">学生页面 ↗</a>`
+    : `<div class="nav__search">
+        <input type="search" id="site-search" placeholder="搜索习题 / 解答  ( / )" autocomplete="off" aria-label="搜索习题或解答">
+        <div class="search-results" id="site-search-results" data-open="false" role="listbox"></div>
+      </div>
+      ${link("/index.html", "首页", "home")}
+      ${link("/answers.html", "全部答案", "answers")}
+      ${link("/submit.html", "上传答案", "submit", "nav__cta")}
+      ${
+        discussions
+          ? `<a class="nav__link" href="${discussions}" target="_blank" rel="noopener">讨论区</a>`
+          : ""
+      }`;
   return `<header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href="${rootPrefix}/index.html">
@@ -86,37 +104,23 @@ function header(rootPrefix, active, opts) {
     </a>
     <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav">目录</button>
     <nav class="nav" id="site-nav" data-open="false" aria-label="主导航">
-      <div class="nav__search">
-        <input type="search" id="site-search" placeholder="搜索习题 / 解答  ( / )" autocomplete="off" aria-label="搜索习题或解答">
-        <div class="search-results" id="site-search-results" data-open="false" role="listbox"></div>
-      </div>
-      ${link("/index.html", "首页", "home")}
-      ${link("/answers.html", "全部答案", "answers")}
-      ${link("/submit.html", "上传答案", "submit", "nav__cta")}
-      ${
-        /* 只有批改页自己才显示这个入口，公开页面不暴露它 */
-        opts && opts.admin
-          ? `<a class="nav__link" href="${rootPrefix}/admin.html" aria-current="page">批改台</a>`
-          : ""
-      }
-      ${
-        discussions
-          ? `<a class="nav__link" href="${discussions}" target="_blank" rel="noopener">讨论区</a>`
-          : ""
-      }
+      ${navInner}
     </nav>
   </div>
 </header>`;
 }
 
-function footer(rootPrefix) {
+function footer(rootPrefix, opts) {
   const repoUrl = site.repo && site.repo.indexOf("your-") !== 0 ? `https://github.com/${site.repo}` : "";
+  /* 批改页的页脚不放公开站链接，理由同导航栏 */
+  const navLinks =
+    opts && opts.admin
+      ? ""
+      : `${repoUrl ? `<a href="${repoUrl}" target="_blank" rel="noopener">GitHub 仓库</a> · ` : ""}<a href="${rootPrefix}/submit.html">上传答案</a> · <a href="${rootPrefix}/answers.html">全部答案</a>`;
   return `<footer class="site-footer">
   <div class="site-footer__inner">
     <p class="site-footer__note">本网站的解答由课程师生共同贡献，仅供学习交流使用。题目版权归原书作者与出版社所有。</p>
-    <nav>
-      ${repoUrl ? `<a href="${repoUrl}" target="_blank" rel="noopener">GitHub 仓库</a> · ` : ""}<a href="${rootPrefix}/submit.html">上传答案</a> · <a href="${rootPrefix}/answers.html">全部答案</a>
-    </nav>
+    <nav>${navLinks}</nav>
   </div>
 </footer>`;
 }
@@ -132,7 +136,7 @@ ${header(rootPrefix, active, { admin: admin })}
 <main>
 ${body}
 </main>
-${footer(rootPrefix)}
+${footer(rootPrefix, { admin: admin })}
 <script>window.SITE_ROOT = ${JSON.stringify(rootPrefix)};</script>
 <script>
 window.SITE_CONFIG = ${JSON.stringify({
