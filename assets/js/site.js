@@ -1163,14 +1163,23 @@
       answersPerChapter[ch] = (answersPerChapter[ch] || 0) + 1;
     });
 
-    /* 首页：「本学期新增 N 条同学答案」 */
+    /* 首页那条「N 条同学答案」：口径由 site.stats 决定。
+       配了 start / end 就按区间数（例如「建站到 2027-01-15」），
+       没配就退回「本月」。 */
     var recent = document.querySelector("[data-stat-recent]");
     if (recent) {
+      var stats = CONFIG.stats || {};
+      var label = stats.label || "本月";
       var thisMonth = new Date().toISOString().slice(0, 7);
       var n = list.filter(function (a) {
-        return String(a.date || "").indexOf(thisMonth) === 0;
+        var day = String(a.date || "").slice(0, 10);
+        if (!day) return false;
+        if (stats.start && day < stats.start) return false;
+        if (stats.end && day > stats.end) return false;
+        if (!stats.start && !stats.end) return day.indexOf(thisMonth) === 0;
+        return true;
       }).length;
-      recent.textContent = "本学期新增 " + n + " 条同学答案";
+      recent.textContent = label + "新增 " + n + " 条同学答案";
     }
 
     /* 「全部答案」页的抬头 */

@@ -142,6 +142,7 @@ ${footer(rootPrefix, { admin: admin })}
 window.SITE_CONFIG = ${JSON.stringify({
     repo: site.repo,
     submission: site.submission,
+    stats: site.stats || {},
   })};
 window.SEARCH_INDEX = /*SEARCH_INDEX_TOKEN*/[];
 </script>
@@ -194,9 +195,23 @@ const uploadReady =
   String(sb.anonKey || "").length > 20;
 const autoApprove = !!sb.autoApprove;
 
-const newThisMonth = ANSWERS.filter((a) =>
-  String(a.date || "").startsWith(new Date().toISOString().slice(0, 7)),
-).length;
+/* 首页那个统计口径由 site.stats 决定：
+   配了 start / end 就按区间数（例如「本学期」），没配就退回「本月」。 */
+const statsConfig = site.stats || {};
+const statsLabel = statsConfig.label || "本月";
+
+function inStatsWindow(dateText) {
+  const day = String(dateText || "").slice(0, 10);
+  if (!day) return false;
+  if (statsConfig.start && day < statsConfig.start) return false;
+  if (statsConfig.end && day > statsConfig.end) return false;
+  if (!statsConfig.start && !statsConfig.end) {
+    return day.startsWith(new Date().toISOString().slice(0, 7));
+  }
+  return true;
+}
+
+const newThisMonth = ANSWERS.filter((a) => inStatsWindow(a.date)).length;
 
 const chapterRows = course.chapters
   .map((c, i) => {
@@ -252,7 +267,7 @@ const homeBody = `  <div class="wrap">
       <div class="section__head">
         <h2>📚 按章节浏览</h2>
         <p>共 ${course.chapters.length} 章、${totalExercises} 道习题</p>
-        <span class="section__count" data-stat-recent>本学期新增 ${newThisMonth} 条同学答案</span>
+        <span class="section__count" data-stat-recent>${statsLabel}新增 ${newThisMonth} 条同学答案</span>
       </div>
       <ul class="chapter-list">
 ${chapterRows}

@@ -5,6 +5,7 @@
     "subtitle": "Schmitt-Grohé, Uribe & Woodford, International Macroeconomics (draft, May 25, 2021)",
     "description": "面向课程的《国际宏观经济学》习题库：每道课后题都有独立页面，同学不需要注册就能直接上传自己的解答与附件，全班共享。",
     "repo": "LongAoTian1761/suw",
+    "stats": {"label": "本学期", "start": "2026-09-01", "end": "2027-01-15"},
     "showProblemText": true,
     "submission": {
       "backend": "supabase",
