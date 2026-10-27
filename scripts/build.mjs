@@ -424,15 +424,36 @@ for (const c of course.chapters) {
     const list = answersByExercise[e.id] || [];
     const chapter = chapterOf(String(e.id).split(".")[0]) || c;
 
-    const showProblem = site.showProblemText !== false && !!e.problem;
-    const problemNote =
-      e.problemSource === "pdf"
+    const problemImage = e.problemImage ? String(e.problemImage).replace(/^\/+/, "") : "";
+    const hasProblemImage = !!problemImage && fs.existsSync(path.join(root, problemImage));
+    const showProblem =
+      site.showProblemText !== false && (!!e.problem || hasProblemImage);
+    const problemNote = hasProblemImage
+      ? `<p class="field__hint" style="margin-top:12px">题面按教材 PDF 原版排版显示。点击图片可打开原尺寸版本；复杂公式与上下标请以此图片为准。</p>`
+      : e.problemSource === "pdf"
         ? `<p class="field__hint" style="margin-top:14px">题面由教材 PDF 自动提取，分式、上下标等复杂公式可能有偏差，请以教材原文为准。发现错误欢迎在「上传我的答案」里一并说明。</p>`
         : "";
+    const problemImageBlock = hasProblemImage
+      ? `<figure class="problem-source">
+        <a href="${escAttr(`${prefix}/${problemImage}`)}" target="_blank" rel="noopener" aria-label="打开习题 ${escAttr(e.id)} 的教材原题图片">
+          <img src="${escAttr(`${prefix}/${problemImage}`)}" alt="${escAttr(`习题 ${e.id} ${e.title || ""}：教材 PDF 原题`)}" loading="lazy" decoding="async">
+        </a>
+        <figcaption>教材原题 · 点击图片可放大</figcaption>
+      </figure>`
+      : "";
+    const problemTextBlock = showProblem && e.problem
+      ? hasProblemImage
+        ? `<details class="problem-text">
+          <summary>显示可搜索文字版</summary>
+          <div class="problem prose" data-md>${esc(e.problem)}</div>
+        </details>`
+        : `<div class="problem prose" data-md>${esc(e.problem)}</div>`
+      : "";
     const problemBlock = showProblem
       ? `<section class="block">
-        <div class="block__head"><h2>题目</h2><span class="tag tag--muted">Problem</span></div>
-        <div class="problem prose" data-md>${esc(e.problem)}</div>
+        <div class="block__head"><h2>题目</h2><span class="tag tag--muted">${hasProblemImage ? "教材原版" : "Problem"}</span></div>
+        ${problemImageBlock}
+        ${problemTextBlock}
         ${problemNote}
       </section>`
       : "";

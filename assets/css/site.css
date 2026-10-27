@@ -948,6 +948,61 @@ h3 {
   margin-top: 0;
 }
 
+.problem-source {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(22, 38, 42, 0.06);
+}
+
+.problem-source a {
+  display: block;
+  border-bottom: 0;
+}
+
+.problem-source img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+
+.problem-source figcaption {
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--surface-soft, #f7f8f7);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.problem-text {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfa;
+}
+
+.problem-text summary {
+  padding: 11px 14px;
+  color: var(--muted-strong, #536466);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.problem-text[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.problem-text .problem {
+  margin: 16px;
+  padding-left: 16px;
+}
+
 .answer-ref {
   border: 1px solid #cfe0dc;
   border-left: 3px solid var(--official);
