@@ -466,6 +466,10 @@
       escAttr(name) +
       '"></iframe>' +
       "</div>" +
+      '<details class="answer-pdf__mobile" data-mobile-pdf="' + escAttr(href) + '">' +
+      '<summary>展开 PDF 预览</summary>' +
+      '<p class="answer-pdf__state" role="status"></p>' +
+      '<div class="answer-pdf__pages"></div></details>' +
       '<figcaption class="answer-figure__caption">' +
       '<a class="answer-figure__name" href="' +
       escAttr(href) +
@@ -523,6 +527,58 @@
      下载文件，内嵌框里什么也画不出来（只剩我们自己设的底色）。
      所以这里先把文件抓成 Blob，再按 application/pdf 重新包一层给浏览器，
      这样服务器那边存的类型不对也能正常预览。抓不动就退回直接嵌。 */
+  var mobilePdfLibrary;
+  document.addEventListener("toggle", async function (event) {
+    var panel = event.target;
+    if (!panel.matches || !panel.matches("[data-mobile-pdf]") || !panel.open ||
+        panel.dataset.loaded || !panel.getClientRects().length) return;
+    panel.dataset.loaded = "true";
+    var status = panel.querySelector("[role=status]");
+    var pages = panel.querySelector(".answer-pdf__pages");
+    status.textContent = "正在加载 PDF 预览…";
+    var task;
+    try {
+      var base = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/legacy/build/";
+      if (!mobilePdfLibrary) {
+        mobilePdfLibrary = import(base + "pdf.min.mjs").catch(function (error) {
+          mobilePdfLibrary = null;
+          throw error;
+        });
+      }
+      var lib = await mobilePdfLibrary;
+      lib.GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
+      task = lib.getDocument({ url: panel.dataset.mobilePdf, isEvalSupported: false });
+      var pdf = await task.promise;
+      var width = Math.max(320, Math.min(860, pages.clientWidth || panel.clientWidth));
+      var ratio = Math.min(window.devicePixelRatio || 1, 2);
+      for (var i = 1; i <= pdf.numPages; i++) {
+        if (!panel.isConnected) return;
+        status.textContent = "正在加载第 " + i + " / " + pdf.numPages + " 页…";
+        var page = await pdf.getPage(i);
+        var viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.ceil(viewport.width * ratio);
+        canvas.height = Math.ceil(viewport.height * ratio);
+        canvas.setAttribute("role", "img");
+        canvas.setAttribute("aria-label", "PDF 第 " + i + " 页，共 " + pdf.numPages + " 页");
+        await page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport: viewport,
+          transform: [ratio, 0, 0, ratio, 0, 0],
+        }).promise;
+        pages.appendChild(canvas);
+        page.cleanup();
+      }
+      status.textContent = "共 " + pdf.numPages + " 页";
+    } catch (error) {
+      delete panel.dataset.loaded;
+      pages.replaceChildren();
+      status.textContent = "预览未能加载，可重新展开，或点下方「打开完整 PDF」。";
+    } finally {
+      if (task) await task.destroy().catch(function () {});
+    }
+  }, true);
+
   function loadPdf(frame) {
     if (window.matchMedia("(max-width: 860px), (hover: none) and (pointer: coarse)").matches) return;
     var src = frame.getAttribute("data-pdf-src");
