@@ -473,7 +473,9 @@
       esc(name) +
       "</a>" +
       (f.size ? "<small>" + esc(f.size) + "</small>" : "") +
-      '<span class="answer-figure__hint">在新窗口打开</span>' +
+      '<a class="answer-figure__hint answer-pdf__open" href="' +
+      escAttr(href) +
+      '" target="_blank" rel="noopener">打开完整 PDF</a>' +
       "</figcaption>" +
       "</figure>"
     );
@@ -522,6 +524,7 @@
      所以这里先把文件抓成 Blob，再按 application/pdf 重新包一层给浏览器，
      这样服务器那边存的类型不对也能正常预览。抓不动就退回直接嵌。 */
   function loadPdf(frame) {
+    if (window.matchMedia("(max-width: 860px), (hover: none) and (pointer: coarse)").matches) return;
     var src = frame.getAttribute("data-pdf-src");
     frame.removeAttribute("data-pdf-src");
     if (!src) return;

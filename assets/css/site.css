@@ -1207,6 +1207,27 @@ h3 {
   background: var(--band);
 }
 
+@media (max-width: 860px), (hover: none) and (pointer: coarse) {
+  .answer-pdf__box {
+    display: none;
+  }
+
+  .answer-figure--pdf .answer-figure__caption {
+    flex-wrap: wrap;
+  }
+
+  .answer-figure--pdf .answer-pdf__open {
+    flex: 0 0 100%;
+    display: block;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-tint);
+    color: var(--brand);
+    text-align: center;
+    font-weight: 600;
+  }
+}
+
 .answer-pdf__state {
   margin: 0;
   padding: 10px 12px;

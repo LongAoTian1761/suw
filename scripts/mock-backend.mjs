@@ -171,7 +171,7 @@ const server = http.createServer(async (req, res) => {
         } catch {
           return send(res, 400, { message: "Invalid JSON body" });
         }
-        if (!row.exercise || !row.author || !row.body) {
+        if (!row.exercise || !row.author || row.body == null) {
           return send(res, 400, { message: "Missing required fields" });
         }
         if (row.status !== "verified") {
@@ -180,8 +180,8 @@ const server = http.createServer(async (req, res) => {
               'new row violates row-level security policy (status must be "verified")',
           });
         }
-        if (String(row.body).length < 10 || String(row.body).length > 20000) {
-          return send(res, 400, { message: "body length out of range" });
+        if (!hasValidContent(row)) {
+          return send(res, 400, { message: "Provide a body or an attachment; body must not exceed 20000 characters" });
         }
         const record = {
           id: row.id || crypto.randomUUID(),
@@ -220,8 +220,7 @@ const server = http.createServer(async (req, res) => {
         const violates =
           !editable.length ||
           (patch.status && !["verified", "withdrawn"].includes(patch.status)) ||
-          (patch.body != null &&
-            (String(patch.body).length < 10 || String(patch.body).length > 20000));
+          editable.some((r) => !hasValidContent({ ...r, ...patch }));
         if (violates) {
           return send(res, 403, {
             message: 'new row violates row-level security policy for table "submissions"',
@@ -252,3 +251,7 @@ server.listen(PORT, () => {
   console.log(`[mock-backend] http://localhost:${PORT}`);
   console.log(`[mock-backend] rows: GET /_rows · reset: DELETE /_rows`);
 });
+function hasValidContent({ body, attachments }) {
+  return typeof body === "string" && Array.from(body).length <= 20000 &&
+    (body.trim().length > 0 || (Array.isArray(attachments) && attachments.length > 0));
+}

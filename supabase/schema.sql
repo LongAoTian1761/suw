@@ -41,7 +41,10 @@ create table if not exists public.submissions (
   constraint submissions_status_allowed
     check (status in ('verified', 'peer', 'alternative', 'pending', 'rejected', 'withdrawn')),
   constraint submissions_body_len
-    check (char_length(body) between 10 and 20000),
+    check (char_length(body) <= 20000),
+  constraint submissions_has_content
+    check (body ~ '[^[:space:]]' or
+      (jsonb_typeof(attachments) = 'array' and attachments <> '[]'::jsonb)),
   constraint submissions_author_len
     check (char_length(author) between 1 and 60),
   constraint submissions_exercise_len

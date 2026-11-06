@@ -276,11 +276,12 @@
   }
 
   function validate() {
+    var body = els["f-body"].value.trim();
     var ok = true;
     [
       [els["f-exercise"], els["f-exercise"].value === ""],
       [els["f-name"], !els["f-name"].value.trim()],
-      [els["f-body"], els["f-body"].value.trim().length < 10],
+      [els["f-body"], (!body && !files.length && !kept.length) || Array.from(body).length > 20000],
     ].forEach(function (pair) {
       markInvalid(pair[0], pair[1]);
       if (pair[1]) ok = false;
@@ -662,7 +663,7 @@
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (!validate()) {
-      setStatus("请先补全标红的必填项：习题、姓名、答案正文（至少 10 个字符）。", "warn");
+      setStatus("请检查标红项：选择习题、填写姓名，并填写正文或上传附件。", "warn");
       var bad = form.querySelector(
         ".field[data-invalid='true'] input, .field[data-invalid='true'] select, .field[data-invalid='true'] textarea",
       );
