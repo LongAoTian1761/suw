@@ -28,6 +28,14 @@ as $$
   where s.status in ('verified', 'peer', 'alternative')
     and s.body ~ '[^[:space:]]'
     and char_length(s.body) <= 1200
+    and not exists (
+      select 1 from jsonb_array_elements(
+        case when jsonb_typeof(s.attachments) = 'array' then s.attachments else '[]'::jsonb end
+      ) as a(file)
+      where coalesce(a.file->>'name', '') ~* '\.pdf$'
+        or coalesce(a.file->>'url', '') ~* '\.pdf($|[?#])'
+        or coalesce(a.file->>'type', '') = 'application/pdf'
+    )
     and not exists (select 1 from public.answer_translations t
       where t.submission_id = s.id and t.source_revision = s.revision)
   order by s.updated_at desc nulls last, s.id

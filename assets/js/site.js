@@ -725,15 +725,18 @@
       ">" +
       head +
       (a.title ? '<h3 class="answer-card__title">' + esc(a.title) + "</h3>" : "") +
-      '<div class="answer-card__body">' +
+      ((a.attachments || []).some(isPdfFile)
+        ? '<p class="answer-translation__pending">PDF 附件译文暂未提供</p>'
+        : a.translation
+          ? '<div class="answer-translation__toolbar"><button type="button" class="btn btn--outline" data-toggle-answer-translation aria-pressed="false">查看译文</button><span>机器翻译</span></div>'
+          : "") +
+      '<div class="answer-card__body" data-answer-original>' +
       bodyHtml(a.body, a.attachments) +
       "</div>" +
-      (a.translation
-        ? '<details class="answer-translation"><summary>' +
-          (a.translation.target_lang === "en" ? "English translation" : "中文译文") +
-          ' · 机器翻译</summary><div class="answer-card__body" lang="' +
+      (a.translation && !(a.attachments || []).some(isPdfFile)
+        ? '<div class="answer-card__body answer-translation" data-answer-translated hidden lang="' +
           (a.translation.target_lang === "en" ? "en" : "zh") +
-          '">' + bodyHtml(a.translation.body, a.attachments) + "</div></details>"
+          '">' + bodyHtml(a.translation.body, a.attachments) + "</div>"
         : "") +
       attachmentList(a.attachments) +
       (a.feedback
@@ -1167,6 +1170,21 @@
       el.className = "tag";
     });
   }
+
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-toggle-answer-translation]");
+    if (!button) return;
+    var card = button.closest(".answer-card");
+    var original = card.querySelector("[data-answer-original]");
+    var translated = card.querySelector("[data-answer-translated]");
+    if (!original || !translated) return;
+    var show = translated.hidden;
+    translated.hidden = !show;
+    original.hidden = show;
+    button.setAttribute("aria-pressed", String(show));
+    button.textContent = show ? "查看原文" : "查看译文";
+    typeset();
+  });
 
   function renderAll(payload) {
     renderExercise(payload);

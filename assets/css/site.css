@@ -1211,15 +1211,21 @@ h3 {
   display: none;
 }
 
-.answer-translation {
-  margin-top: 12px;
-  border-top: 1px solid var(--line);
+.answer-translation__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.answer-translation summary {
-  padding: 10px 0;
-  color: var(--brand);
-  cursor: pointer;
+.answer-translation__toolbar span,
+.answer-translation__pending {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.answer-card__body[hidden] {
+  display: none;
 }
 
 @media (max-width: 860px), (hover: none) and (pointer: coarse) {
