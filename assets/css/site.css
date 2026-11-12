@@ -1211,6 +1211,17 @@ h3 {
   display: none;
 }
 
+.answer-translation {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.answer-translation summary {
+  padding: 10px 0;
+  color: var(--brand);
+  cursor: pointer;
+}
+
 @media (max-width: 860px), (hover: none) and (pointer: coarse) {
   .answer-pdf__box {
     display: none;

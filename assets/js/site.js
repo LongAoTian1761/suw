@@ -728,6 +728,13 @@
       '<div class="answer-card__body">' +
       bodyHtml(a.body, a.attachments) +
       "</div>" +
+      (a.translation
+        ? '<details class="answer-translation"><summary>' +
+          (a.translation.target_lang === "en" ? "English translation" : "中文译文") +
+          ' · 机器翻译</summary><div class="answer-card__body" lang="' +
+          (a.translation.target_lang === "en" ? "en" : "zh") +
+          '">' + bodyHtml(a.translation.body, a.attachments) + "</div></details>"
+        : "") +
       attachmentList(a.attachments) +
       (a.feedback
         ? '<div class="feedback">' +

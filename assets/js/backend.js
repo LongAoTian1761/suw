@@ -340,7 +340,22 @@
       })
       .then(function (rows) {
         lastFetchOk = true;
-        return (rows || []).map(toAnswer);
+        var answers = (rows || []).map(toAnswer);
+        if (!answers.length) return answers;
+        return fetch(URL_BASE + "/rest/v1/answer_translations?select=submission_id,source_revision,target_lang,body&limit=500", {
+          headers: authHeaders({ accept: "application/json" }),
+          signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout
+            ? AbortSignal.timeout(1500) : undefined,
+        }).then(function (result) {
+          return result.ok ? result.json() : [];
+        }).then(function (translations) {
+          var byId = new Map(translations.map(function (t) { return [t.submission_id, t]; }));
+          answers.forEach(function (a) {
+            var t = byId.get(a.id);
+            if (t && t.source_revision === a.revision) a.translation = t;
+          });
+          return answers;
+        }).catch(function () { return answers; });
       })
       .catch(function (err) {
         lastFetchOk = false;
