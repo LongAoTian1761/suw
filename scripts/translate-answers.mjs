@@ -210,16 +210,28 @@ async function main() {
   }
   let rows;
   try {
-    rows = await request(rest + "/rpc/pending_answer_translations", headers, {
-      p_limit: maxChars === null && !TRANSLATION_SUBMISSION_ID ? limit : 50,
-    });
+    rows = await request(rest + "/rpc/pending_answer_translations", headers, { p_limit: 50 });
+    if (TRANSLATION_SUBMISSION_ID) rows = rows.filter((row) => row.id === TRANSLATION_SUBMISSION_ID);
+    if (maxChars !== null) rows = rows.filter((row) => Array.from(row.body || "").length <= maxChars);
+    if (rows.length) {
+      const ids = rows.map((row) => row.id).join(",");
+      const meta = await fetch(rest + "/submissions?select=id,revision,attachments,status&id=in.(" + ids + ")", {
+        headers, redirect: "error", signal: AbortSignal.timeout(15000),
+      });
+      if (!meta.ok) throw new Error("读取附件元数据 HTTP " + meta.status);
+      const publishedText = new Map((await meta.json()).filter((row) =>
+        ["verified", "peer", "alternative"].includes(row.status) &&
+        !(row.attachments || []).some((file) => file &&
+          (/\.pdf(?:$|[?#])/i.test(file.name || "") ||
+           /\.pdf(?:$|[?#])/i.test(file.url || "") ||
+           file.type === "application/pdf"))
+      ).map((row) => [row.id, row.revision]));
+      rows = rows.filter((row) => publishedText.get(row.id) === row.revision);
+    }
   } catch (error) {
     throw new Error("读取 Supabase 待翻译队列失败：" + (error.cause?.code || error.message));
   }
-  if (TRANSLATION_SUBMISSION_ID) rows = rows.filter((row) => row.id === TRANSLATION_SUBMISSION_ID);
-  if (maxChars !== null) {
-    rows = rows.filter((row) => Array.from(row.body || "").length <= maxChars).slice(0, limit);
-  }
+  rows = rows.slice(0, limit);
   console.log("待处理正文：" + rows.length + " 条");
   let translated = 0;
   let skipped = 0;

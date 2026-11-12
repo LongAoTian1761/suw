@@ -728,7 +728,7 @@
       ((a.attachments || []).some(isPdfFile)
         ? '<p class="answer-translation__pending">PDF 附件译文暂未提供</p>'
         : a.translation
-          ? '<div class="answer-translation__toolbar"><button type="button" class="btn btn--outline" data-toggle-answer-translation aria-pressed="false">查看译文</button><span>机器翻译</span></div>'
+          ? '<div class="answer-translation__toolbar"><button type="button" class="btn btn--outline" data-toggle-answer-translation aria-pressed="false">查看译文</button></div>'
           : "") +
       '<div class="answer-card__body" data-answer-original>' +
       bodyHtml(a.body, a.attachments) +
