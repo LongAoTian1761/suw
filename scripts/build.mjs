@@ -298,7 +298,7 @@ ${chapterRows}
               (autoApprove
                 ? "提交后你的答案会立刻出现在对应习题下面。"
                 : "老师确认后才会公开展示。")
-            : "填好之后可以生成 Markdown，发给老师或存进课程共享文件夹。"
+            : "填好之后可以生成 Markdown，下载或存进课程共享文件夹。"
         }你也可以选择只提交给老师、不公开署名。</p>
         <ul>
           <li><strong>公式排版</strong>：行内公式写 <code>$c_t = y_t - r d_{t-1}$</code>，独立成行的公式用 <code>$$ ... $$</code>。</li>
@@ -691,7 +691,7 @@ const configNotice = uploadReady
       </div>`
   : `<div class="callout callout--note" style="border-left-color:#8a5310;background:#fbf1e2;border-color:#e8d4b4">
         <h3>接收服务器尚未配置</h3>
-        <p>同学现在可以正常填写表单，但提交时会退回到「生成 Markdown 交给老师」的方式，附件不能直接上传。老师按 README 的「三步接入接收服务器」填好 Supabase 的两个值并重新构建，即可开启直接上传。</p>
+        <p>同学现在可以正常填写表单，但提交时会退回到「生成 Markdown」的方式，附件不能直接上传。老师按 README 的「三步接入接收服务器」填好 Supabase 的两个值并重新构建，即可开启直接上传。</p>
       </div>`;
 
 const submitBody = `  <div class="page-head">
@@ -701,7 +701,7 @@ const submitBody = `  <div class="page-head">
       <p class="page-head__meta">写下你的推导，公式、图片、代码都可以一起提交。${
         uploadReady
           ? "无需注册账号，填完直接提交。"
-          : "填完后可生成 Markdown 交给老师。"
+          : "填完后可生成 Markdown。"
       }</p>
     </div>
   </div>
@@ -728,7 +728,7 @@ const submitBody = `  <div class="page-head">
             <p>${
               uploadReady
                 ? "提交即上传，整个过程不需要注册、不需要登录、不需要任何账号。"
-                : "如果还没有配置接收服务器，可以生成 Markdown 或下载 <code>.md</code> 文件交给老师。"
+                : "如果还没有配置接收服务器，可以生成 Markdown 或下载 <code>.md</code> 文件保存答案。"
             }</p>
           </li>
           <li>

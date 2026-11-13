@@ -653,7 +653,7 @@
       (stored
         ? '<p>你可以在下面的<a href="#mine">「我的提交」</a>里随时<strong>修改</strong>或<strong>撤回</strong>它。' +
           (AUTO_APPROVE ? "这条现在就在网站上。" : "老师确认后会展示。") + "</p>"
-        : "<p>请把下面生成的 Markdown（和附件）交给老师。</p>") +
+        : "") +
       (res && res.id
         ? '<p class="field__hint">提交编号：' + OEM.esc(res.id) + "</p>"
         : "");
@@ -713,7 +713,7 @@
         .catch(function (err) {
           setStatus(
             (err && err.message ? err.message : "提交失败") +
-              "　你可以改用下面的「下载 .md」把答案直接发给老师。",
+              "　你可以改用下面的「下载 .md」保存答案。",
             "warn",
           );
           setBusy(false);
@@ -738,7 +738,7 @@
       return;
     }
 
-    setStatus("还没有配置接收服务器，已为你生成 Markdown。请复制或下载后交给老师。", "warn");
+    setStatus("还没有配置接收服务器，已为你生成 Markdown。可复制或下载。", "warn");
   });
 
   var copyBtn = document.getElementById("f-copy");
