@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { translate, translateInChunks, translationEndpoint, ollamaProvider } from "./translate-answers.mjs";
+import { compareExercise, translate, translateInChunks, translationEndpoint, ollamaProvider } from "./translate-answers.mjs";
 
 test("formula and image reference survive translation byte for byte", async () => {
   const body = "经常账户 $CA_1=-10/21$\n\n![图](fig.png)\n\n$$C_1=C_2$$";
@@ -58,5 +58,21 @@ test("chunks retry only a failed segment and preserve plain equations and number
 
 test("cannot return an incomplete translation after both attempts fail", async () => {
   await assert.rejects(translateInChunks("结论 $x=1$。", async () =>
-    ({ target_lang: "en", body: "Conclusion" })), /Protected content changed/);
+    ({ target_lang: "en", body: "结论" })), /Wrong language/);
+});
+
+test("fallback restores math without asking the model to copy it", async () => {
+  const r = await translateInChunks("结论 $x=1$。\nAlready English.", async () =>
+    ({ target_lang: "en", body: "Conclusion" }));
+  assert.equal(r.body, "Conclusion $x=1$。\nAlready English.");
+});
+
+test("sorts chapters and exercise numbers numerically", () => {
+  assert.deepEqual(["10.1", "1.11", "2.1", "1.2"].sort(compareExercise), ["1.2", "1.11", "2.1", "10.1"]);
+});
+
+test("restores a recognizable placeholder with changed case or spaces", async () => {
+  const r = await translateInChunks("结论 $x=1$。", async () =>
+    ({ target_lang: "en", body: "Conclusion: oem _ keep _ 0 _ end." }));
+  assert.equal(r.body, "Conclusion: $x=1$.");
 });
