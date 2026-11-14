@@ -1,5 +1,7 @@
 import { pathToFileURL } from "node:url";
 import { readFile, writeFile, rename } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 // Protect formula source, code, image markup, link destinations, and bare URLs.
 const protectedParts = /^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)[^\n]*|\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<!\\)\$(?!\$)[^\n]+?(?<!\\)\$|`+[^`\n]+`+|!\[[^\]]*\]\([^\n]*?\)|(?<=\]\()[^\n]+?(?=\))|https?:\/\/[^\s<>]+/gm;
@@ -72,7 +74,7 @@ export function compareExercise(a, b) {
   return Number(x[1]) - Number(y[1]) || Number(x[2]) - Number(y[2]);
 }
 
-export async function translateInChunks(body, provider, onProgress = () => {}, onFallback) {
+export async function translateInChunks(body, provider, onProgress = () => {}, onFallback, repair) {
   const protectedBody = prepare(body);
   let prefix = "OEM_VALUE_";
   while (body.includes(prefix)) prefix += "_";
@@ -118,6 +120,7 @@ export async function translateInChunks(body, provider, onProgress = () => {}, o
       continue;
     }
     if (!needsTranslation(lines[i])) continue;
+    const repairHistory = [];
     try {
     const [, leading, content] = lines[i].match(/^(\s*)(.*?)\s*$/);
     // Keep Markdown tables intact: skip publication if the model alters cells.
@@ -131,19 +134,24 @@ export async function translateInChunks(body, provider, onProgress = () => {}, o
         continue;
       }
       if (Array.from(chunk).length > 650) throw new Error("Translation segment too long; needs manual review");
-      const attempts = onFallback ? 5 : 2;
+      const attempts = repair ? 6 : onFallback ? 5 : 2;
+      let draft;
+      let diagnosis;
       for (let attempt = 1; ; attempt++) {
         try {
-          if (attempt === 2 && (chunk.match(tokens) || chunk.includes("|"))) {
+          if (!repair && attempt === 2 && (chunk.match(tokens) || chunk.includes("|"))) {
             translatedChunks.push(await translateProseOnly(chunk));
             onProgress(++completed);
             break;
           }
-          const reply = await provider(chunk, target);
+          const reply = attempt > 1 && repair
+            ? await repair({ source: chunk, draft, diagnosis, target, round: attempt - 1 })
+            : await provider(chunk, target);
           const output = typeof reply.body === "string" ? reply.body.trim().replace(
             /\bOEM\s*_\s*(KEEP|VALUE)\s*(_+)\s*(\d+)\s*_\s*END\b/gi,
             (_, kind, underscores, index) => "OEM_" + kind.toUpperCase() + underscores + index + "_END",
           ) : "";
+          if (output && (attempt === 1 || !repair)) draft = output;
           if (reply.target_lang !== target || !output || output === chunk ||
               (target === "zh" && !/\p{Script=Han}/u.test(prose(output))) ||
               (target === "en" && /\p{Script=Han}/u.test(prose(output)))) {
@@ -159,6 +167,9 @@ export async function translateInChunks(body, provider, onProgress = () => {}, o
           onProgress(++completed);
           break;
         } catch (error) {
+          diagnosis = error.message;
+          if (repair && attempt > 1) repairHistory.push({ line: i / 2 + 1, round: attempt - 1, reason: diagnosis });
+          if (repair && !draft) throw error;
           if (attempt === attempts) throw error;
         }
       }
@@ -169,7 +180,7 @@ export async function translateInChunks(body, provider, onProgress = () => {}, o
       let end = i;
       while (end + 2 < originals.length && originals[end + 2].trim()) end += 2;
       const reason = error.cause?.code || error.message;
-      failedBlocks.push({ line: blockStart / 2 + 1, endLine: end / 2 + 1, reason });
+      failedBlocks.push({ line: blockStart / 2 + 1, endLine: end / 2 + 1, reason, repairHistory });
       lines.splice(blockStart, end - blockStart + 1, ...originals.slice(blockStart, end + 1));
       lines[blockStart] = "**原文 · 待修订**\n\n" + lines[blockStart];
       i = end;
@@ -253,7 +264,41 @@ async function main() {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TRANSLATION_ENDPOINT,
     TRANSLATION_API_KEY, TRANSLATION_MODEL = "qwen3:4b-instruct",
     TRANSLATION_BATCH_SIZE = "5", TRANSLATION_MAX_CHARS, TRANSLATION_SUBMISSION_ID,
-    TRANSLATION_FAILURE_FILE, TRANSLATION_DRY_RUN } = process.env;
+    TRANSLATION_FAILURE_FILE, TRANSLATION_DRY_RUN, TRANSLATION_REPAIR_SCRIPT,
+    SUW_REVIEW_SMTP } = process.env;
+  const repair = TRANSLATION_REPAIR_SCRIPT && ((input) => new Promise((resolve, reject) => {
+    const token = /OEM_(?:KEEP|VALUE)_+\d+_END/g;
+    const expected = new Set(input.source.match(token) ?? []);
+    const extra = [...input.draft.matchAll(token)].find((match) => !expected.has(match[0]));
+    const start = extra ? extra.index : 0;
+    const fragment = extra ? extra[0] : input.draft;
+    const child = execFile("python", ["-X", "utf8", TRANSLATION_REPAIR_SCRIPT], { timeout: 90000, windowsHide: true }, (error, stdout) => {
+      if (error) return reject(new Error("Local repair model failed"));
+      try {
+        const { replacement } = JSON.parse(stdout);
+        if (typeof replacement !== "string" || !replacement || /\b(?:Source|Draft|Error):/.test(replacement)) {
+          throw new Error("Invalid replacement");
+        }
+        resolve({ target_lang: input.target,
+          body: input.draft.slice(0, start) + replacement + input.draft.slice(start + fragment.length) });
+      } catch { reject(new Error("Invalid local repair response")); }
+    });
+    child.stdin.on("error", () => {});
+    child.stdin.end(JSON.stringify({ ...input, fragment }), "utf8");
+  }));
+  async function notifyReview(exercise, blocks = 0) {
+    if (!SUW_REVIEW_SMTP) return;
+    await new Promise((resolve) => {
+      const script = fileURLToPath(new URL("./send-translation-review.py", import.meta.url));
+      const child = execFile("python", ["-X", "utf8", script], { timeout: 30000, windowsHide: true }, (error) => {
+          if (error) console.error("待修邮件发送失败，记录已保存在本机。");
+          else console.log("待修邮件已发送：" + exercise);
+          resolve();
+      });
+      child.stdin.on("error", () => {});
+      child.stdin.end(JSON.stringify({ exercise, blocks }), "utf8");
+    });
+  }
   const dryRun = TRANSLATION_DRY_RUN === "1";
   if (![SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY].every(Boolean)) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -337,7 +382,7 @@ async function main() {
       console.log("正在翻译正文（" + Array.from(row.body || "").length + " 字符）…");
       const result = await translateInChunks(row.body, provider, (count) => {
         console.log("已校验 " + count + " 个片段");
-      }, (block) => pendingBlocks.push(block));
+      }, (block) => pendingBlocks.push(block), repair);
       if (dryRun) {
         console.log(JSON.stringify({ id: row.id, revision: row.revision, elapsed_ms: Date.now() - started, ...result }));
       } else {
@@ -355,6 +400,7 @@ async function main() {
           console.log("待修记录已保存：" + row.exercise + " · " + TRANSLATION_FAILURE_FILE);
         } else delete failures[row.id];
         await saveFailures();
+        if (pendingBlocks.length) await notifyReview(row.exercise, pendingBlocks.length);
       }
     } catch (error) {
       failed++;
@@ -371,6 +417,7 @@ async function main() {
           reason: error.cause?.code || error.message,
         };
         await saveFailures();
+        if (failures[row.id].count === 1) await notifyReview(row.exercise);
         console.log("待修记录已保存：" + row.exercise + " · " + TRANSLATION_FAILURE_FILE);
         if (failures[row.id].count >= 2) console.log("已记录两轮翻译任务失败，下次暂缓：" + row.id);
       }
