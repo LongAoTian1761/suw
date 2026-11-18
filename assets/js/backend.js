@@ -84,8 +84,7 @@
 
   function safeName(name) {
     return String(name || "file")
-      .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_")
-      .replace(/\s+/g, "_")
+      .replace(/[^A-Za-z0-9._-]/g, "_")
       .slice(-80);
   }
 
