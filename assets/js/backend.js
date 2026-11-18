@@ -414,7 +414,23 @@
       });
   }
 
+  function deleteWithdrawn(id) {
+    return fetch(URL_BASE + "/rest/v1/rpc/delete_own_withdrawn_submission", {
+      method: "POST",
+      headers: authHeaders({ "content-type": "application/json" }, true),
+      body: JSON.stringify({ p_id: id }),
+    }).then(function (res) {
+      if (!res.ok) return res.text().then(function (text) {
+        throw BackendError("删除失败：" + describe(res, text), text);
+      });
+      return res.json();
+    }).then(function (deleted) {
+      if (deleted !== true) throw BackendError("删除失败：请确认答案已撤回且属于当前设备。");
+    });
+  }
+
   window.OEMBackend = {
+    deleteWithdrawn: deleteWithdrawn,
     mode: MODE,
     supabaseReady: supabaseReady,
     lastFetchOk: function () {

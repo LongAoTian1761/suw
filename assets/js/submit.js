@@ -467,7 +467,9 @@
           (a.grade ? '<span class="tag tag--grade">等级 ' + OEM.esc(a.grade) + "</span>" : "") +
           (a.status === "withdrawn"
             ? '<button type="button" class="btn btn--outline btn--sm" data-restore="' +
-              OEM.escAttr(a.id) + '">恢复提交</button>'
+              OEM.escAttr(a.id) + '">恢复提交</button>' +
+              '<button type="button" class="btn btn--quiet btn--sm" data-delete="' +
+              OEM.escAttr(a.id) + '">删除</button>'
             : '<button type="button" class="btn btn--outline btn--sm" data-edit="' +
               OEM.escAttr(a.id) + '">修改</button>' +
               '<button type="button" class="btn btn--quiet btn--sm" data-withdraw="' +
@@ -533,8 +535,31 @@
 
   if (els["my-submissions"]) {
     els["my-submissions"].addEventListener("click", function (e) {
-      var t = e.target.closest("[data-edit],[data-withdraw],[data-restore],[data-drop]");
+      var t = e.target.closest("[data-edit],[data-withdraw],[data-restore],[data-drop],[data-delete]");
       if (!t) return;
+      if (t.hasAttribute("data-delete")) {
+        if (t.getAttribute("data-confirm") !== "1") {
+          t.setAttribute("data-confirm", "1");
+          t.textContent = "确定永久删除？";
+          t.__confirmTimer = setTimeout(function () {
+            if (!t.isConnected) return;
+            t.removeAttribute("data-confirm");
+            t.textContent = "删除";
+          }, 6000);
+          setStatus("再次点击可永久删除这条已撤回的答案，删除后无法恢复。", "warn");
+          return;
+        }
+        clearTimeout(t.__confirmTimer);
+        t.disabled = true;
+        BACKEND.deleteWithdrawn(t.getAttribute("data-delete")).then(function () {
+          setStatus("答案已删除。", "ok");
+          return loadMine();
+        }).catch(function (err) {
+          setStatus(err.message || "删除失败", "warn");
+          t.disabled = false;
+        });
+        return;
+      }
 
       if (t.hasAttribute("data-drop")) {
         OEM.writeLocal(
