@@ -5,6 +5,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +17,9 @@ const answersFile = JSON.parse(
 );
 const ANSWERS = (answersFile.answers || []).filter((a) => a.status !== "rejected");
 const site = course.site;
+const problemTranslationsPath = path.join(root, "data/problem-translations.json");
+const problemTranslations = fs.existsSync(problemTranslationsPath)
+  ? JSON.parse(fs.readFileSync(problemTranslationsPath, "utf8")) : {};
 
 /* Allow the receiving server to be supplied at build time instead of being
    committed, which is handy for CI and for pointing the site at the local
@@ -58,7 +62,7 @@ function head({ title, description, rootPrefix, pageTitle }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(pageTitle || title)}</title>
 <meta name="description" content="${escAttr(description || site.description)}">
-<link rel="stylesheet" href="${rootPrefix}/assets/css/site.css">
+<link rel="stylesheet" href="${rootPrefix}/assets/css/site.css?v=20261121-problems">
 <script>
 window.MathJax = {
   tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
@@ -147,8 +151,8 @@ window.SITE_CONFIG = ${JSON.stringify({
 window.SEARCH_INDEX = /*SEARCH_INDEX_TOKEN*/[];
 </script>
 ${inline}
-<script src="${rootPrefix}/assets/js/backend.js"></script>
-<script src="${rootPrefix}/assets/js/site.js"></script>
+<script src="${rootPrefix}/assets/js/backend.js?v=20261118-delete"></script>
+<script src="${rootPrefix}/assets/js/site.js?v=20261121-problems"></script>
 </body>
 </html>
 `;
@@ -449,12 +453,24 @@ for (const c of course.chapters) {
         </details>`
         : `<div class="problem prose" data-md>${esc(e.problem)}</div>`
       : "";
+    const translation = problemTranslations[e.id];
+    const translationCurrent = translation?.reviewed === true && translation.sourceHash ===
+      createHash("sha256").update(e.problem || "").digest("hex");
     const problemBlock = showProblem
       ? `<section class="block">
         <div class="block__head"><h2>题目</h2><span class="tag tag--muted">${hasProblemImage ? "教材原版" : "Problem"}</span></div>
+        ${translationCurrent ? `<div class="problem-language" role="group" aria-label="题目语言">
+          <button type="button" class="btn btn--outline btn--sm" data-problem-language="original" aria-pressed="true">英文原文</button>
+          <button type="button" class="btn btn--outline btn--sm" data-problem-language="zh" aria-pressed="false">中文翻译</button>
+        </div>` : ""}
+        <div data-problem-panel="original">
         ${problemImageBlock}
         ${problemTextBlock}
         ${problemNote}
+        </div>
+        ${translationCurrent ? `<div data-problem-panel="zh" hidden>
+          <div class="problem prose" lang="zh-CN" data-md>${esc(translation.body)}</div>
+        </div>` : ""}
       </section>`
       : "";
 
@@ -674,8 +690,8 @@ fs.writeFileSync(
   const p = path.join(root, "admin.html");
   let html = fs.readFileSync(p, "utf8");
   html = html.replace(
-    '<script src="./assets/js/site.js"></script>',
-    '<script src="./assets/js/site.js"></script>\n<script src="./assets/js/admin.js"></script>',
+    '<script src="./assets/js/site.js?v=20261121-problems"></script>',
+    '<script src="./assets/js/site.js?v=20261121-problems"></script>\n<script src="./assets/js/admin.js"></script>',
   );
   fs.writeFileSync(p, html);
 }
@@ -899,8 +915,8 @@ for (const c of course.chapters) {
 const submitPath = path.join(root, "submit.html");
 let submitHtml = fs.readFileSync(submitPath, "utf8");
 submitHtml = submitHtml.replace(
-  '<script src="./assets/js/site.js"></script>',
-  `<script>window.EXERCISE_CATALOG = ${JSON.stringify(catalog)};</script>\n<script src="./assets/js/site.js"></script>\n<script src="./assets/js/submit.js"></script>`,
+  '<script src="./assets/js/site.js?v=20261121-problems"></script>',
+  `<script>window.EXERCISE_CATALOG = ${JSON.stringify(catalog)};</script>\n<script src="./assets/js/site.js?v=20261121-problems"></script>\n<script src="./assets/js/submit.js?v=20261118-delete"></script>`,
 );
 fs.writeFileSync(submitPath, submitHtml);
 

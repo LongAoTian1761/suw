@@ -1377,6 +1377,20 @@
      `$...$` delimiters first. */
   renderMarkdownBlocks();
 
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-problem-language]");
+    if (!button) return;
+    var section = button.closest("section");
+    var language = button.getAttribute("data-problem-language");
+    section.querySelectorAll("[data-problem-panel]").forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-problem-panel") !== language;
+    });
+    section.querySelectorAll("[data-problem-language]").forEach(function (control) {
+      control.setAttribute("aria-pressed", String(control === button));
+    });
+    typeset();
+  });
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

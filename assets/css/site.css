@@ -2294,3 +2294,7 @@ mjx-container {
     break-inside: avoid;
   }
 }
+/* Exercise language controls stay above both versions of the question. */
+.problem-language { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.problem-language [aria-pressed="true"] { background: #153f5d; border-color: #153f5d; color: #fff; }
+[data-problem-panel][hidden] { display: none !important; }
